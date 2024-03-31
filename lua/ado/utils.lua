@@ -1,0 +1,21 @@
+local M = {}
+--- Await result of plenary job
+---@param job Job
+---@return unknown
+function M.await_result(job)
+	local result
+	while true do
+		if result then
+			return result
+		end
+		vim.wait(1000, function()
+			result = job:result()[1]
+		end)
+	end
+end
+
+function M.printt(t)
+	vim.notify(vim.inspect(t))
+end
+
+return M
