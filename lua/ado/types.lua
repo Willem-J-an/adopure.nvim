@@ -42,6 +42,8 @@
 ---@field threadContext ThreadContext|nil
 ---@field status string
 ---@field isDeleted boolean
+---@field publishedDate string
+---@field lastUpdatedDate string
 
 ---@class Comment
 ---@field id number
@@ -49,6 +51,9 @@
 ---@field content string|nil
 ---@field author Author
 ---@field isDeleted boolean
+---@field publishedDate string
+---@field lastUpdatedDate string
+---@field lastContentUpdatedDate string
 
 ---@class ThreadContext
 ---@field filePath string

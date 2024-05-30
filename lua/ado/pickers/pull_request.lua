@@ -1,22 +1,33 @@
----@class Entry
+---@class PullRequestEntry
 ---@field value PullRequest
 ---@field ordinal number
 ---@field display string
 
 local M = {}
 
+---@return integer autocmd_id
+function M.create_auto_wrap_preview()
+    -- local augroup = vim.api.nvim_create_augroup("ado.nvim", { clear = false })
+    return vim.api.nvim_create_autocmd("User", {
+        pattern = "TelescopePreviewerLoaded",
+        -- group = augroup,
+        callback = function(args)
+            vim.wo.wrap = true
+        end,
+    })
+end
+
 local pull_request_previewer = require("telescope.previewers").new_buffer_previewer({
     title = "Pull request preview",
     ---@param self any
-    ---@param entry Entry
+    ---@param entry PullRequestEntry
     ---@param _ any
     define_preview = function(self, entry, _)
-        require("ado.preview").pull_request_preview(self.state.bufnr, entry.value)
+        require("ado.previews.pull_request").pull_request_preview(self.state.bufnr, entry.value)
     end,
 })
-
 ---@param entry PullRequest
----@return Entry
+---@return PullRequestEntry
 local function entry_maker(entry)
     return {
         value = entry,
@@ -29,7 +40,7 @@ end
 ---@param state_manager StateManager
 local function handle_choice(prompt_bufnr, state_manager)
     require("telescope.actions").close(prompt_bufnr)
-    ---@type Entry
+    ---@type PullRequestEntry
     local selection = require("telescope.actions.state").get_selected_entry()
     state_manager:set_state_by_choice(selection.value)
     require("ado.activate").activate_pull_request_context(state_manager.state)
@@ -38,6 +49,7 @@ end
 ---Choose and activate selected pull request
 ---@param state_manager StateManager
 function M.choose_and_activate(state_manager)
+    local wrap_preview_id = M.create_auto_wrap_preview()
     require("telescope.pickers")
         .new(require("telescope.themes").get_ivy({}), {
             prompt_title = "Pull requests",
@@ -50,6 +62,7 @@ function M.choose_and_activate(state_manager)
             attach_mappings = function(prompt_bufnr, _)
                 require("telescope.actions").select_default:replace(function()
                     handle_choice(prompt_bufnr, state_manager)
+                    vim.api.nvim_del_autocmd(wrap_preview_id)
                 end)
                 return true
             end,

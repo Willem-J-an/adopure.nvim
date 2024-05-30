@@ -1,7 +1,8 @@
 local M = {}
 
 local namespace = vim.api.nvim_create_namespace("ado")
-local function readable_timestamp(iso_str)
+
+function M.readable_timestamp(iso_str)
     local pattern = "(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)"
     local year, month, day, hour, minute, seconds = iso_str:match(pattern)
     local timestamp = os.time({ year = year, month = month, day = day, hour = hour, min = minute, sec = seconds })
@@ -20,7 +21,7 @@ end
 local function get_info_table(pull_request)
     return {
         "Created: ",
-        readable_timestamp(pull_request.creationDate),
+        M.readable_timestamp(pull_request.creationDate),
         string.rep(" ", 5) .. "|" .. string.rep(" ", 5),
         "Status: ",
         pull_request.status,

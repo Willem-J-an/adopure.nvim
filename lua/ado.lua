@@ -37,4 +37,8 @@ function M.render_quickfix()
     require("ado.quickfix").render_quickfix(get_loaded_state().pull_request_threads)
 end
 
+function M.thread_picker()
+    require("ado.pickers.thread").choose_thread(get_loaded_state())
+end
+
 return M
