@@ -1,18 +1,15 @@
 ---@class AdoContext
----@field repository_name string
+---@field organization_url string
 ---@field project_name string
+---@field repository_name string
 local AdoContext = {}
 ---@return AdoContext
 function AdoContext:new()
-    local repository_name = require("ado.git").get_repo_name()
-    local project_name, err = require("ado.project").get_project_name(repository_name)
-    if err then
-        error(err)
-    end
-    assert(project_name, "No project name found;")
+    local organization_url, project_name, repository_name = require("ado.git").get_remote_config()
     local o = {
-        repository_name = repository_name,
+        organization_url = organization_url,
         project_name = project_name,
+        repository_name = repository_name,
     }
     self.__index = self
     return setmetatable(o, self)

@@ -10,9 +10,52 @@ function M.get_repo_name()
     })
     get_git_repo_job:start()
 
-    local repository_path = require("plenary.path"):new(require("ado.utils").await_result(get_git_repo_job))
+    local repository_path = require("plenary.path"):new(require("ado.utils").await_result(get_git_repo_job)[1])
     local path_parts = vim.split(repository_path.filename, repository_path.path.sep)
     return path_parts[#path_parts]
+end
+
+---@param remote_url string
+---@return string organization_url
+---@return string project_name
+---@return string repository_name
+local function extract_git_details(remote_url)
+    local organization_url, project_name, repository_name
+    if remote_url:find("@ssh.dev.azure.com") then
+        local _, _, base_url, org_name, project_name_extracted, repo_name_extracted =
+            remote_url:find(".-@(ssh.dev.azure.com):v3/(.-)/(.-)/(.+)%s*%(fetch%)")
+        organization_url = "https://" .. base_url:gsub("ssh.", "") .. "/" .. org_name
+        project_name = project_name_extracted
+        repository_name = repo_name_extracted
+    elseif remote_url:find("https") then
+        local https_pattern = "(https://)[^@]*@([^/]+)/([^/]+)/([^/]+)/_git/([^%s]+)"
+        local _, _, protocol, domain, org_name, project_name_extracted, repo_name_extracted =
+            remote_url:find(https_pattern)
+        organization_url = protocol .. domain .. "/" .. org_name
+        project_name = project_name_extracted
+        repository_name = repo_name_extracted
+    end
+
+    local trim_pattern = "^%s*(.-)%s*$"
+    return organization_url:gsub(trim_pattern, "%1") .. "/",
+        project_name:gsub(trim_pattern, "%1"),
+        repository_name:gsub(trim_pattern, "%1")
+end
+
+---Get config from git remote
+---@return string organization_url
+---@return string project_name
+---@return string repository_name
+function M.get_remote_config()
+    local get_remotes = require("plenary.job"):new({
+        command = "git",
+        args = { "remote", "-v" },
+        cwd = ".",
+    })
+    get_remotes:start()
+    ---@type string
+    local remote = require("ado.utils").await_result(get_remotes)[1]
+    return extract_git_details(remote)
 end
 
 ---@param pull_request PullRequest

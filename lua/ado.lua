@@ -40,7 +40,7 @@ end
 local subcommand_tbl = {
     load = {
         complete_args = { "context", "threads" },
-        impl = function(args, opts)
+        impl = function(args, _)
             local sub_impl = {
                 context = function()
                     if not state_manager then
@@ -58,7 +58,7 @@ local subcommand_tbl = {
     },
     submit = {
         complete_args = { "comment", "vote", "thread_status" },
-        impl = function(args, opts)
+        impl = function(args, _)
             local sub_impl = {
                 comment = function()
                     require("ado.thread").submit_comment(M.get_loaded_state())
@@ -75,7 +75,7 @@ local subcommand_tbl = {
     },
     open = {
         complete_args = { "quickfix", "thread_picker", "new_thread", "existing_thread" },
-        impl = function(args, opts)
+        impl = function(args, _)
             local sub_impl = {
                 quickfix = function()
                     require("ado.quickfix").render_quickfix(M.get_loaded_state().pull_request_threads)
@@ -97,7 +97,6 @@ local subcommand_tbl = {
 
 ---@param opts table
 function M.ado_pure(opts)
-    vim.notify(vim.inspect(opts))
     local fargs = opts.fargs
     local subcommand_key = fargs[1]
 
@@ -120,7 +119,7 @@ end
 
 vim.api.nvim_create_user_command("AdoPure", M.ado_pure, {
     nargs = "*",
-    range=true,
+    range = true,
     desc = "Azure DevOps Pull Request command.",
     complete = function(arg_lead, cmdline, _)
         local subcmd_key, subcmd_arg_lead = cmdline:match("^AdoPure*%s(%S+)%s(.*)$")
@@ -139,4 +138,5 @@ vim.api.nvim_create_user_command("AdoPure", M.ado_pure, {
         end
     end,
 })
+
 return M

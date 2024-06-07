@@ -1,12 +1,12 @@
 local M = {}
 local curl = require("plenary.curl")
-local Secret = require("ado.secret")
+local config = require("ado.config.internal")
 
-local API_VERSION = "api-version=7.1-preview.4"
 local GIT_API_VERSION = "api-version=7.1-preview.1"
 
-local access_token = Secret.access_token
-PROJECT_NAME = ""
+local access_token = config:access_token()
+local organization_url = ""
+local project_name = ""
 
 local headers = {
     ["Authorization"] = "basic " .. access_token,
@@ -34,27 +34,17 @@ local function get_azure_devops(url, request_type)
     return result, nil
 end
 
----Get projects from Azure DevOps
----@return Project[] projects, string|nil err
-function M.get_projects()
-    local result, err = get_azure_devops(Secret.organization_url .. "_apis/projects?" .. API_VERSION, "projects")
-    if not result then
-        return {}, err or "Could not retrieve projects"
-    end
-
-    ---@type Project[]
-    local projects = result.value
-    return projects, err
-end
-
 ---Get repository from Azure DevOps
 ---@param context AdoContext
 ---@return Repository|nil repository, string|nil err
 function M.get_repository(context)
-    if PROJECT_NAME == "" then
-        PROJECT_NAME = context.project_name
+    if organization_url == "" then
+        organization_url = context.organization_url
     end
-    local url = Secret.organization_url .. PROJECT_NAME .. "/_apis/git/repositories?" .. GIT_API_VERSION
+    if project_name == "" then
+        project_name = context.project_name
+    end
+    local url = organization_url .. project_name .. "/_apis/git/repositories?" .. GIT_API_VERSION
     local result, err = get_azure_devops(url, "repositories")
     if not result then
         return nil, err
@@ -215,7 +205,8 @@ end
 function M.submit_vote(pull_request, vote)
     ---@type ConnectionData
     ---@diagnostic disable-next-line: assign-type-mismatch
-    local connection_result, connection_err = get_azure_devops(Secret.organization_url .. "/_apis/connectionData", "connectionData")
+    local connection_result, connection_err =
+        get_azure_devops(organization_url .. "/_apis/connectionData", "connectionData")
     if connection_err then
         return nil, connection_err
     end
@@ -232,5 +223,4 @@ function M.submit_vote(pull_request, vote)
     )
     return result, err
 end
-
 return M

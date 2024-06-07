@@ -10,7 +10,7 @@ function M.await_result(job)
         end
         vim.wait(1000, function()
             ---@diagnostic disable-next-line: missing-return
-            result = job:result()[1]
+            result = job:result()
         end)
     end
 end
