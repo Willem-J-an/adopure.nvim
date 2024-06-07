@@ -21,9 +21,18 @@
 ---@field displayName string
 ---@field id string
 
+---@class ConnectionUser
+---@field id string
+---@field isActive boolean
+
+---@class ConnectionData
+---@field authenticatedUser ConnectionUser
+---@field authorizedUser ConnectionUser
+
 ---@class Reviewer
 ---@field displayName string
----@field vote number
+---@field id string
+---@field vote PullRequestVote
 
 ---@class Repository
 ---@field name string

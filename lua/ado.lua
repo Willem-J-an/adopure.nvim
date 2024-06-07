@@ -1,44 +1,142 @@
+local M = {}
+
 ---@type StateManager|nil
 local state_manager
 ---@return AdoState
-local function get_loaded_state()
+function M.get_loaded_state()
     assert(state_manager and state_manager.state, "Choose and activate a pull request first;")
     return state_manager.state
 end
-local M = {}
 
-function M.load_pull_request_context()
-    local context = require("ado.state").AdoContext:new()
-    state_manager = require("ado.state").StateManager:new(context)
-    state_manager:choose_and_activate()
+---@class SubCommand
+---@field impl fun(args:string[], opts: table)
+---@field complete_args? string[]
+
+local function completer(load_args, arg_lead)
+    return vim.iter(load_args)
+        :filter(function(load_arg)
+            return load_arg:find(arg_lead) ~= nil
+        end)
+        :totable()
+end
+---@param sub_impl string[]
+---@param subcommand_args string[]
+---@param subcommand string
+local function prompt_target(sub_impl, subcommand_args, subcommand)
+    if #subcommand_args == 1 then
+        sub_impl[subcommand_args[1]]()
+        return
+    end
+    vim.ui.select(vim.tbl_keys(sub_impl), { "Choose target" }, function(choice)
+        if not choice then
+            vim.notify("AdoPure: Unknown " .. subcommand .. " target", vim.log.levels.ERROR)
+            return
+        end
+        sub_impl[choice]()
+    end)
 end
 
-function M.load_pull_request_threads()
-    get_loaded_state():load_pull_request_threads()
+---@type table<string, SubCommand>
+local subcommand_tbl = {
+    load = {
+        complete_args = { "context", "threads" },
+        impl = function(args, opts)
+            local sub_impl = {
+                context = function()
+                    if not state_manager then
+                        local context = require("ado.state").AdoContext:new()
+                        state_manager = require("ado.state").StateManager:new(context)
+                    end
+                    state_manager:choose_and_activate()
+                end,
+                threads = function()
+                    M.get_loaded_state():load_pull_request_threads()
+                end,
+            }
+            prompt_target(sub_impl, args, "load")
+        end,
+    },
+    submit = {
+        complete_args = { "comment", "vote", "thread_status" },
+        impl = function(args, opts)
+            local sub_impl = {
+                comment = function()
+                    require("ado.thread").submit_comment(M.get_loaded_state())
+                end,
+                vote = function()
+                    require("ado.review").submit_vote(M.get_loaded_state())
+                end,
+                thread_status = function()
+                    require("ado.thread").update_thread_status(M.get_loaded_state())
+                end,
+            }
+            prompt_target(sub_impl, args, "submit")
+        end,
+    },
+    open = {
+        complete_args = { "quickfix", "thread_picker", "new_thread", "existing_thread" },
+        impl = function(args, opts)
+            local sub_impl = {
+                quickfix = function()
+                    require("ado.quickfix").render_quickfix(M.get_loaded_state().pull_request_threads)
+                end,
+                thread_picker = function()
+                    require("ado.pickers.thread").choose_thread(M.get_loaded_state())
+                end,
+                new_thread = function()
+                    require("ado.thread").new_thread_window(M.get_loaded_state())
+                end,
+                existing_thread = function()
+                    require("ado.thread").open_thread_window(M.get_loaded_state(), nil)
+                end,
+            }
+            prompt_target(sub_impl, args, "open")
+        end,
+    },
+}
+
+---@param opts table
+function M.ado_pure(opts)
+    vim.notify(vim.inspect(opts))
+    local fargs = opts.fargs
+    local subcommand_key = fargs[1]
+
+    local args = #fargs > 1 and vim.list_slice(fargs, 2, #fargs) or {}
+    local subcommand = subcommand_tbl[subcommand_key]
+    if not subcommand then
+        vim.ui.select(vim.tbl_keys(subcommand_tbl), {
+            prompt = "Select subcommand...",
+        }, function(choice)
+            if not choice then
+                vim.notify("AdoPure: Unknown command: " .. subcommand_key, vim.log.levels.ERROR)
+                return
+            end
+            M.ado_pure({ fargs = { choice } })
+        end)
+        return
+    end
+    subcommand.impl(args, opts)
 end
 
-function M.submit_comment()
-    require("ado.thread").submit_comment(get_loaded_state())
-end
+vim.api.nvim_create_user_command("AdoPure", M.ado_pure, {
+    nargs = "*",
+    range=true,
+    desc = "Azure DevOps Pull Request command.",
+    complete = function(arg_lead, cmdline, _)
+        local subcmd_key, subcmd_arg_lead = cmdline:match("^AdoPure*%s(%S+)%s(.*)$")
+        if
+            subcmd_key
+            and subcmd_arg_lead
+            and subcommand_tbl[subcmd_key]
+            and subcommand_tbl[subcmd_key].complete_args
+        then
+            return completer(subcommand_tbl[subcmd_key].complete_args, subcmd_arg_lead)
+        end
 
-function M.update_thread_status()
-    require("ado.thread").update_thread_status(get_loaded_state())
-end
-
-function M.new_thread_window()
-    require("ado.thread").new_thread_window(get_loaded_state())
-end
-
-function M.open_thread_window()
-    require("ado.thread").open_thread_window(get_loaded_state(), nil)
-end
-
-function M.render_quickfix()
-    require("ado.quickfix").render_quickfix(get_loaded_state().pull_request_threads)
-end
-
-function M.thread_picker()
-    require("ado.pickers.thread").choose_thread(get_loaded_state())
-end
-
+        if cmdline:match("^AdoPure*%s+%w*$") then
+            local subcommand_keys = vim.tbl_keys(subcommand_tbl)
+            return completer(subcommand_keys, arg_lead)
+        end
+    end,
+})
 return M
