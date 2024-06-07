@@ -29,9 +29,23 @@ local pull_request_previewer = require("telescope.previewers").new_buffer_previe
 ---@param entry PullRequest
 ---@return PullRequestEntry
 local function entry_maker(entry)
+    ---@type string|nil
+    local votes = vim.iter(entry.reviewers)
+        :filter(function(reviewer)
+            return reviewer.vote ~= 0
+        end)
+        :map(function(reviewer)
+            local Review = require("ado.review")
+            local vote = Review.get_vote_from_value(reviewer.vote)
+            return Review.vote_icons[vote]
+        end)
+        :join(" ")
+    if votes == "" then
+        votes = nil
+    end
     return {
         value = entry,
-        display = entry.title,
+        display = entry.title .. " - " .. (votes or "󰇘 "),
         ordinal = entry.title,
     }
 end

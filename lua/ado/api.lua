@@ -134,37 +134,14 @@ function M.get_pull_request_threads(pull_request)
     return threads, err
 end
 
----post request to azure devops
----@param url string
----@param request_type string
----@return RequestResult|nil result, string|nil err
-local function post_azure_devops(url, request_type, body)
-    local ok, response = pcall(curl.request, {
-        url = url,
-        method = "post",
-        headers = headers,
-        body = vim.fn.json_encode(body),
-    })
-    if not ok or not response or response.status ~= 200 then
-        local details = ""
-        if response then
-            details = response.body or tostring(response)
-        end
-        return nil, "Failed to post " .. request_type .. "; " .. details
-    end
-    ---@type RequestResult
-    local result = vim.fn.json_decode(response.body)
-    return result, nil
-end
-
 ---patch request to azure devops
 ---@param url string
 ---@param request_type string
 ---@return RequestResult|nil result, string|nil err
-local function patch_azure_devops(url, request_type, body)
+local function submit_azure_devops(url, http_verb, request_type, body)
     local ok, response = pcall(curl.request, {
         url = url,
-        method = "patch",
+        method = http_verb,
         headers = headers,
         body = vim.fn.json_encode(body),
     })
@@ -173,7 +150,7 @@ local function patch_azure_devops(url, request_type, body)
         if response then
             details = response.body or tostring(response)
         end
-        return nil, "Failed to patch " .. request_type .. "; " .. details
+        return nil, "Failed to " .. http_verb .. " " .. request_type .. "; " .. details
     end
     ---@type RequestResult
     local result = vim.fn.json_decode(response.body)
@@ -187,8 +164,12 @@ end
 function M.create_pull_request_comment_thread(pull_request, new_thread)
     ---@type Thread|nil
     ---@diagnostic disable-next-line: assign-type-mismatch
-    local result, err =
-        post_azure_devops(pull_request.url .. "/threads?" .. GIT_API_VERSION, "pull request thread", new_thread)
+    local result, err = submit_azure_devops(
+        pull_request.url .. "/threads?" .. GIT_API_VERSION,
+        "POST",
+        "pull request thread",
+        new_thread
+    )
 
     return result, err
 end
@@ -201,8 +182,9 @@ end
 function M.create_pull_request_comment_reply(pull_request, thread, comment)
     ---@type Comment|nil
     ---@diagnostic disable-next-line: assign-type-mismatch
-    local result, err = post_azure_devops(
+    local result, err = submit_azure_devops(
         pull_request.url .. "/threads/" .. thread.id .. "/comments?" .. GIT_API_VERSION,
+        "POST",
         "pull request comment reply",
         comment
     )
@@ -217,12 +199,37 @@ end
 function M.update_pull_request_thread(pull_request, thread)
     ---@type Thread|nil
     ---@diagnostic disable-next-line: assign-type-mismatch
-    local result, err = patch_azure_devops(
+    local result, err = submit_azure_devops(
         pull_request.url .. "/threads/" .. thread.id .. "?" .. GIT_API_VERSION,
+        "PATCH",
         "pull request thread update",
         thread
     )
+    return result, err
+end
 
+---Create new pull request vote
+---@param pull_request PullRequest
+---@param vote PullRequestVote
+---@return Reviewer|nil reviewer, string|nil err
+function M.submit_vote(pull_request, vote)
+    ---@type ConnectionData
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    local connection_result, connection_err = get_azure_devops(Secret.organization_url .. "/_apis/connectionData", "connectionData")
+    if connection_err then
+        return nil, connection_err
+    end
+
+    local reviewer_id = connection_result.authenticatedUser.id
+
+    ---@type Reviewer|nil
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    local result, err = submit_azure_devops(
+        pull_request.url .. "/reviewers/" .. reviewer_id .. "?" .. GIT_API_VERSION,
+        "PUT",
+        "pull request thread update",
+        { vote = vote, id = reviewer_id }
+    )
     return result, err
 end
 

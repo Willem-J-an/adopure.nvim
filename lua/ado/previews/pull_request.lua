@@ -28,26 +28,55 @@ local function get_info_table(pull_request)
     }
 end
 
+---@param pull_request PullRequest
+---@return string[] votes
+local function get_votes(pull_request)
+    local votes = {}
+    local vote_from_value = require("ado.review").get_vote_from_value
+    vim.iter(pull_request.reviewers)
+        :filter(function(reviewer)
+            return reviewer.vote ~= 0
+        end)
+        :each(function(reviewer)
+            table.insert(votes, reviewer.displayName .. ": " .. vote_from_value(reviewer.vote))
+        end)
+    return votes
+end
+
 ---@param info_line string
 ---@param pull_request PullRequest
 ---@param subtitle string
+---@param votes string[]
 ---@return string[]
-local function get_preview_content(info_line, pull_request, subtitle)
+local function get_preview_content(info_line, pull_request, subtitle, votes)
     local preview_content = {
         pull_request.title,
         subtitle,
         info_line,
-        "",
-        "Description:"
     }
+
+    if not vim.tbl_isempty(votes) then
+        table.insert(preview_content, "")
+        table.insert(preview_content, "Votes:")
+        for _, vote in ipairs(votes) do
+            table.insert(preview_content, vote)
+        end
+    end
+
+    table.insert(preview_content, "")
+    table.insert(preview_content, "Description:")
     for _, line in pairs(vim.split(pull_request.description or "", "\n") or {}) do
         table.insert(preview_content, line)
     end
     return preview_content
 end
 
-local function line_highlights(bufnr)
-    for _, highlight in ipairs({ { 0, "@markup.heading" }, {4, "@markup.heading"} }) do
+local function line_highlights(bufnr, vote_count)
+    for _, highlight in ipairs({
+        { 0,                  "@markup.heading" },
+        { 4,                  "@markup.heading" },
+        { 4 + 2 + vote_count, "@markup.heading" },
+    }) do
         vim.api.nvim_buf_set_extmark(bufnr, namespace, highlight[1], 0, { line_hl_group = highlight[2] })
     end
 end
@@ -81,11 +110,11 @@ function M.pull_request_preview(bufnr, pull_request)
 
     local info_table = get_info_table(pull_request)
     local info_line = table.concat(info_table)
-    local preview_content = get_preview_content(info_line, pull_request, subtitle)
+    local votes = get_votes(pull_request)
+    local preview_content = get_preview_content(info_line, pull_request, subtitle, votes)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, preview_content)
-    line_highlights(bufnr)
+    line_highlights(bufnr, #votes)
     segment_highlights(bufnr, subtitle, subtitle_table, info_line, info_table)
-
     vim.treesitter.start(bufnr, "markdown")
 end
 

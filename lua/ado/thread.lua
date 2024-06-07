@@ -85,17 +85,18 @@ end
 
 ---@return number line_start, number col_start, number line_end, number col_end
 local function get_selected_position()
-    local _, line_start, col_start = unpack(vim.fn.getpos("v"))
-    local _, line_end, col_end = unpack(vim.fn.getpos("."))
-
     local mode = vim.api.nvim_get_mode()["mode"]
-    if mode == "V" then
+    local pos_by_mode = { "'<", "'>" }
+    if vim.tbl_contains({ "v", "V" }, mode) then
+        pos_by_mode = { "v", "." }
+    end
+    local _, line_start, col_start = unpack(vim.fn.getpos(pos_by_mode[1]))
+    local _, line_end, col_end = unpack(vim.fn.getpos(pos_by_mode[2]))
+
+    if col_start == col_end or (col_start == 1 and col_end == 2147483647) then
         return line_start - 1, 0, line_end - 1, -1
     end
-    if mode == "v" then
-        return line_start - 1, col_start - 1, line_end - 1, col_end
-    end
-    error("Mode not implemented: " .. mode)
+    return line_start - 1, col_start - 1, line_end - 1, col_end
 end
 
 ---Get thread context for left or right file
