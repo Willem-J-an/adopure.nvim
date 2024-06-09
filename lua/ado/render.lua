@@ -1,5 +1,5 @@
 local M = {}
-BUFFER_NAME = "ado.nvim]"
+local buffer_name = "ado.nvim]"
 
 function M.rightsize_window(namespace)
     local extmarks = vim.api.nvim_buf_get_extmarks(0, namespace, 0, -1, { details = true })
@@ -61,10 +61,10 @@ end
 
 local function new_or_clear_ado_window(namespace)
     local bufnr = vim.api.nvim_get_current_buf()
-    if not vim.api.nvim_buf_get_name(0):match(BUFFER_NAME .. "$") then
+    if not vim.api.nvim_buf_get_name(0):match(buffer_name .. "$") then
         M.open_split(namespace)
         bufnr = vim.api.nvim_get_current_buf()
-        vim.api.nvim_buf_set_name(0, "[" .. bufnr .. "-" .. BUFFER_NAME)
+        vim.api.nvim_buf_set_name(0, "[" .. bufnr .. "-" .. buffer_name)
     end
     for _, extmark in pairs(vim.api.nvim_buf_get_extmarks(bufnr, namespace, 0, -1, {})) do
         local extmark_id = extmark[1]

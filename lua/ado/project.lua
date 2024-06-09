@@ -17,7 +17,7 @@ local function format_project_choice(project)
 end
 
 ---Set project_name in cache file;
----@param project_cache_path Path
+---@diagnostic disable-next-line: undefined-doc-name
 ---@return string|nil err
 local function set_project_name_cache(project_cache_path)
     local projects, err = require("ado.api").get_projects()

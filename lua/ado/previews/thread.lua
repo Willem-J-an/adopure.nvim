@@ -19,7 +19,9 @@ function M.thread_preview(bufnr, thread)
                 " - "
             )
             table.insert(preview_content, title .. ":")
-            table.insert(preview_content, "> " .. tostring(comment.content))
+            for _, line in pairs(vim.split(comment.content, "\n")) do
+                table.insert(preview_content, '>' .. line)
+            end
             table.insert(preview_content, "")
         end
     end

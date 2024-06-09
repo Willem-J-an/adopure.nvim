@@ -29,6 +29,7 @@ local function handle_choice(prompt_bufnr)
     require("telescope.actions").close(prompt_bufnr)
     ---@type ThreadEntry
     local selection = require("telescope.actions.state").get_selected_entry()
+    vim.notify(vim.inspect(selection))
     -- Do something with selection
 end
 

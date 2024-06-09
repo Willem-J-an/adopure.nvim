@@ -11,7 +11,7 @@ function M.create_auto_wrap_preview()
     return vim.api.nvim_create_autocmd("User", {
         pattern = "TelescopePreviewerLoaded",
         -- group = augroup,
-        callback = function(args)
+        callback = function(_)
             vim.wo.wrap = true
         end,
     })

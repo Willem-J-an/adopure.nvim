@@ -117,26 +117,16 @@ function M.ado_pure(opts)
     subcommand.impl(args, opts)
 end
 
-vim.api.nvim_create_user_command("AdoPure", M.ado_pure, {
-    nargs = "*",
-    range = true,
-    desc = "Azure DevOps Pull Request command.",
-    complete = function(arg_lead, cmdline, _)
-        local subcmd_key, subcmd_arg_lead = cmdline:match("^AdoPure*%s(%S+)%s(.*)$")
-        if
-            subcmd_key
-            and subcmd_arg_lead
-            and subcommand_tbl[subcmd_key]
-            and subcommand_tbl[subcmd_key].complete_args
-        then
-            return completer(subcommand_tbl[subcmd_key].complete_args, subcmd_arg_lead)
-        end
+function M.auto_completer(arg_lead, cmdline, _)
+    local subcmd_key, subcmd_arg_lead = cmdline:match("^AdoPure*%s(%S+)%s(.*)$")
+    if subcmd_key and subcmd_arg_lead and subcommand_tbl[subcmd_key] and subcommand_tbl[subcmd_key].complete_args then
+        return completer(subcommand_tbl[subcmd_key].complete_args, subcmd_arg_lead)
+    end
 
-        if cmdline:match("^AdoPure*%s+%w*$") then
-            local subcommand_keys = vim.tbl_keys(subcommand_tbl)
-            return completer(subcommand_keys, arg_lead)
-        end
-    end,
-})
+    if cmdline:match("^AdoPure*%s+%w*$") then
+        local subcommand_keys = vim.tbl_keys(subcommand_tbl)
+        return completer(subcommand_keys, arg_lead)
+    end
+end
 
 return M

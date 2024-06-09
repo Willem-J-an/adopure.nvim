@@ -7,8 +7,10 @@ local M = {
 local Path = require("plenary.path")
 
 ---Get open file paths with bufnrs
+---@diagnostic disable-next-line: undefined-doc-name
 ---@return table<Path, number>
 local function get_open_file_paths()
+    ---@diagnostic disable-next-line: undefined-doc-name
     ---@type table<Path, number>
     local open_file_paths = {}
     local buffers = vim.api.nvim_list_bufs()

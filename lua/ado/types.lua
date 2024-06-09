@@ -1,6 +1,6 @@
 ---@class RequestResult
 ---@field value any
----@field changeEntries any|nil
+
 
 ---@class PullRequest
 ---@field codeReviewid integer
@@ -122,6 +122,9 @@
 
 ---@class CommitRef
 ---@field commitId  string
+
+---@class ChangeEntries
+---@field changeEntries ChangeEntry[]
 
 ---@class ChangeEntry
 ---@field changeId number

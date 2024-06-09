@@ -1,5 +1,6 @@
 local M = {}
 --- Await result of plenary job
+---@diagnostic disable-next-line: undefined-doc-name
 ---@param job Job
 ---@return unknown
 function M.await_result(job)
@@ -9,7 +10,7 @@ function M.await_result(job)
             return result
         end
         vim.wait(1000, function()
-            ---@diagnostic disable-next-line: missing-return
+            ---@diagnostic disable-next-line: missing-return,undefined-field
             result = job:result()
         end)
     end

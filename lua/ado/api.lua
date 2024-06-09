@@ -16,7 +16,7 @@ local headers = {
 ---Get request from azure devops
 ---@param url string
 ---@param request_type string
----@return RequestResult|nil result, string|nil err
+---@return any|nil result, string|nil err
 local function get_azure_devops(url, request_type)
     local ok, response = pcall(curl.request, {
         url = url,
@@ -45,6 +45,7 @@ function M.get_repository(context)
         project_name = context.project_name
     end
     local url = organization_url .. project_name .. "/_apis/git/repositories?" .. GIT_API_VERSION
+    ---@type RequestResult
     local result, err = get_azure_devops(url, "repositories")
     if not result then
         return nil, err
@@ -63,6 +64,7 @@ end
 ---@param repository Repository
 ---@return PullRequest[] pull_requests, string|nil err
 function M.get_pull_requests(repository)
+    ---@type RequestResult
     local result, err = get_azure_devops(repository.url .. "/pullrequests?" .. GIT_API_VERSION, "pull requests")
     if not result then
         return {}, err
@@ -77,6 +79,7 @@ end
 ---@param pull_request PullRequest
 ---@return Iteration[] iterations, string|nil err
 function M.get_pull_request_iterations(pull_request)
+    ---@type RequestResult
     local result, err =
         get_azure_devops(pull_request.url .. "/iterations?" .. GIT_API_VERSION, "pull request iterations")
     if not result then
@@ -93,6 +96,7 @@ end
 ---@param iteration Iteration
 ---@return ChangeEntry[] change_entries, string|nil err
 function M.get_pull_requests_iteration_changes(pull_request, iteration)
+    ---@type ChangeEntries
     local result, err = get_azure_devops(
         pull_request.url .. "/iterations/" .. iteration.id .. "/changes?" .. GIT_API_VERSION,
         "pull request iteration changes"
@@ -101,9 +105,7 @@ function M.get_pull_requests_iteration_changes(pull_request, iteration)
         return {}, err
     end
 
-    ---@type ChangeEntry[]
-    local change_entries = result.changeEntries
-    return change_entries, err
+    return result.changeEntries, err
 end
 
 ---Get pull request threads from Azure DevOps
@@ -111,6 +113,7 @@ end
 ---@return Thread[] threads, string|nil err
 function M.get_pull_request_threads(pull_request)
     local iteration = "$baseIteration=1&iteration=6"
+    ---@type RequestResult
     local result, err = get_azure_devops(
         pull_request.url .. "/threads?" .. table.concat({ GIT_API_VERSION, iteration }, "&"),
         "pull request threads"
@@ -127,7 +130,7 @@ end
 ---patch request to azure devops
 ---@param url string
 ---@param request_type string
----@return RequestResult|nil result, string|nil err
+---@return any|nil result, string|nil err
 local function submit_azure_devops(url, http_verb, request_type, body)
     local ok, response = pcall(curl.request, {
         url = url,
@@ -142,7 +145,7 @@ local function submit_azure_devops(url, http_verb, request_type, body)
         end
         return nil, "Failed to " .. http_verb .. " " .. request_type .. "; " .. details
     end
-    ---@type RequestResult
+    ---@type Thread|Comment|Reviewer|nil
     local result = vim.fn.json_decode(response.body)
     return result, nil
 end
@@ -153,7 +156,6 @@ end
 ---@return Thread|nil thread, string|nil err
 function M.create_pull_request_comment_thread(pull_request, new_thread)
     ---@type Thread|nil
-    ---@diagnostic disable-next-line: assign-type-mismatch
     local result, err = submit_azure_devops(
         pull_request.url .. "/threads?" .. GIT_API_VERSION,
         "POST",
@@ -171,7 +173,6 @@ end
 ---@return Comment|nil comment, string|nil err
 function M.create_pull_request_comment_reply(pull_request, thread, comment)
     ---@type Comment|nil
-    ---@diagnostic disable-next-line: assign-type-mismatch
     local result, err = submit_azure_devops(
         pull_request.url .. "/threads/" .. thread.id .. "/comments?" .. GIT_API_VERSION,
         "POST",
@@ -188,7 +189,6 @@ end
 ---@return Thread|nil thread, string|nil err
 function M.update_pull_request_thread(pull_request, thread)
     ---@type Thread|nil
-    ---@diagnostic disable-next-line: assign-type-mismatch
     local result, err = submit_azure_devops(
         pull_request.url .. "/threads/" .. thread.id .. "?" .. GIT_API_VERSION,
         "PATCH",
@@ -204,7 +204,6 @@ end
 ---@return Reviewer|nil reviewer, string|nil err
 function M.submit_vote(pull_request, vote)
     ---@type ConnectionData
-    ---@diagnostic disable-next-line: assign-type-mismatch
     local connection_result, connection_err =
         get_azure_devops(organization_url .. "/_apis/connectionData", "connectionData")
     if connection_err then
@@ -214,7 +213,6 @@ function M.submit_vote(pull_request, vote)
     local reviewer_id = connection_result.authenticatedUser.id
 
     ---@type Reviewer|nil
-    ---@diagnostic disable-next-line: assign-type-mismatch
     local result, err = submit_azure_devops(
         pull_request.url .. "/reviewers/" .. reviewer_id .. "?" .. GIT_API_VERSION,
         "PUT",

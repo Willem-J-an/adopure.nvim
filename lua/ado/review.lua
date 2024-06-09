@@ -27,17 +27,10 @@ function M.get_vote_from_value(vote_value)
     return nil, "No vote found for this value;"
 end
 
-local function vote_options()
-    local result = {}
-    for key, value in pairs(M.pull_request_vote) do
-        table.insert(result, key)
-    end
-    return result
-end
 ---Submit vote of choice on pull request
 ---@param state AdoState
 function M.submit_vote(state)
-    vim.ui.select((vote_options()), { prompt = "Select vote;" }, function(vote)
+    vim.ui.select(vim.tbl_keys(M.pull_request_vote), { prompt = "Select vote;" }, function(vote)
         if not vote then
             vim.notify("No vote chosen;", 2)
             return
