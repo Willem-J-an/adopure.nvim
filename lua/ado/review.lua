@@ -29,7 +29,8 @@ end
 
 ---Submit vote of choice on pull request
 ---@param state AdoState
-function M.submit_vote(state)
+---@param _ table
+function M.submit_vote(state,_)
     vim.ui.select(vim.tbl_keys(M.pull_request_vote), { prompt = "Select vote;" }, function(vote)
         if not vote then
             vim.notify("No vote chosen;", 2)

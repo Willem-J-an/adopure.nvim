@@ -2,7 +2,8 @@ local M = {}
 
 ---Render pull request threads in quickfix panel
 ---@param pull_request_threads Thread[]
-function M.render_quickfix(pull_request_threads)
+---@param _ table
+function M.render_quickfix(pull_request_threads, _)
     local entries = {}
     for _, pull_request_thread in pairs(pull_request_threads) do
         local file_path, context

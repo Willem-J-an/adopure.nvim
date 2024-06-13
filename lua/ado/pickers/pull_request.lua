@@ -7,10 +7,8 @@ local M = {}
 
 ---@return integer autocmd_id
 function M.create_auto_wrap_preview()
-    -- local augroup = vim.api.nvim_create_augroup("ado.nvim", { clear = false })
     return vim.api.nvim_create_autocmd("User", {
         pattern = "TelescopePreviewerLoaded",
-        -- group = augroup,
         callback = function(_)
             vim.wo.wrap = true
         end,

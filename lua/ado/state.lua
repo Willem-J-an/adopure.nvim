@@ -51,7 +51,8 @@ function AdoState:load_pull_request_iterations()
     self.active_pull_request_iteration = iterations[#iterations]
 end
 
-function AdoState:load_pull_request_threads()
+---@param _ table
+function AdoState:load_pull_request_threads(_)
     local pull_request_threads, err = require("ado.api").get_pull_request_threads(self.active_pull_request)
     if err then
         error(err)
@@ -85,7 +86,8 @@ function StateManager:new(context)
     return setmetatable(o, self)
 end
 
-function StateManager:choose_and_activate()
+---@param _ table
+function StateManager:choose_and_activate(_)
     require("ado.pickers.pull_request").choose_and_activate(self)
 end
 

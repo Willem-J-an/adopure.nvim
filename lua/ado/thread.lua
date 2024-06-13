@@ -128,7 +128,9 @@ local function get_thread_context(col_end, col_start, line_end, line_start)
     }
 end
 
-function M.new_thread_window(state)
+---@param state AdoState
+---@param _ table
+function M.new_thread_window(state, _)
     local line_start, col_start, line_end, col_end = get_selected_position()
     local selection = vim.api.nvim_buf_get_text(0, line_start, col_start, line_end, col_end, {})
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", false, true, true), "nx", false)
@@ -149,9 +151,13 @@ function M.new_thread_window(state)
     table.insert(state.comment_creations, comment_creation)
 end
 
+---@class OpenThreadWindowOpts
+---@field thread_id number|nil
+
 ---Open thread in window
----@param extmark_id number|nil
-function M.open_thread_window(state, extmark_id)
+---@param opts OpenThreadWindowOpts
+function M.open_thread_window(state, opts)
+    local extmark_id = opts.thread_id
     if not extmark_id then
         local extmarks = require("ado.marker").get_extmarks_at_position(namespace)
         local first_extmark = extmarks[1]
@@ -208,7 +214,8 @@ local thread_status = {
 
 ---Update pull request thread status
 ---@param state AdoState
-function M.update_thread_status(state)
+---@param _ table
+function M.update_thread_status(state, _)
     ---@type number
     local bufnr = vim.api.nvim_get_current_buf()
     local comment_reply = _get_comment_reply(state, bufnr)
@@ -238,7 +245,9 @@ function M.update_thread_status(state)
     end)
 end
 
-function M.submit_comment(state)
+---@param state AdoState
+---@param _ table
+function M.submit_comment(state, _)
     ---@type string|nil
     local err
     ---@type number
