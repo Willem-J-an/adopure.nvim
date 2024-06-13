@@ -1,3 +1,5 @@
+---@diagnostic disable: undefined-doc-name
+
 ---@class ThreadEntry
 ---@field value Thread
 ---@field ordinal number
@@ -28,7 +30,7 @@ end
 ---@param thread_context ThreadContext
 local function open_scroll(file_path, thread_context)
     if vim.fn.filereadable(file_path) == 0 then
-        vim.notify("No such file: " .. file_path, 2)
+        vim.notify("No such file: " .. file_path, 3)
         return
     end
     vim.cmd(":edit " .. file_path)
@@ -56,7 +58,7 @@ end
 
 local thread_filters = {
     ---@param thread Thread
-    hide_system_threads = function(thread)
+    hide_system = function(thread)
         return thread.comments[1].commentType == "text"
     end,
     ---@param thread Thread
@@ -67,6 +69,16 @@ local thread_filters = {
 ---@class ChooseThreadOpts
 ---@field thread_filters string[]
 
+---@param thread_iter Iter
+---@param thread_filter string
+---@return Iter thread_iter
+local function apply_filter(thread_iter, thread_filter)
+    if not thread_filters[thread_filter] then
+        vim.notify("Invalid thread filter provided: " .. thread_filter, 3)
+        return thread_iter
+    end
+    return thread_iter:filter(thread_filters[thread_filter]) ---@diagnostic disable-line: undefined-field
+end
 ---@param pull_request_threads Thread[]
 ---@param opts ChooseThreadOpts
 ---@return Thread[] pull_request_threads
@@ -76,9 +88,9 @@ local function filter_pull_request_threads(pull_request_threads, opts)
     end
     local thread_iter = vim.iter(pull_request_threads)
     for _, thread_filter in ipairs(opts.thread_filters) do
-        thread_iter = thread_iter:filter(thread_filters[thread_filter])
+        thread_iter = apply_filter(thread_iter, thread_filter)
     end
-    return thread_iter:totable()
+    return thread_iter:totable() ---@diagnostic disable-line: undefined-field
 end
 
 ---Choose thread

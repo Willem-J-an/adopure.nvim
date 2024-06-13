@@ -15,5 +15,6 @@ std = {
 		"type",
 		"os",
 		"pcall",
+		"load",
 	},
 }

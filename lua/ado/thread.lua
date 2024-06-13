@@ -172,7 +172,7 @@ function M.open_thread_window(state, opts)
         end
     end
     if not thread_to_open then
-        vim.notify("Did not find thread to open;", 2)
+        vim.notify("Did not find thread to open;", 3)
         return
     end
     local bufnr, mark_id = require("ado.render").render_reply_thread(namespace, thread_to_open)
@@ -220,13 +220,13 @@ function M.update_thread_status(state, _)
     local bufnr = vim.api.nvim_get_current_buf()
     local comment_reply = _get_comment_reply(state, bufnr)
     if not comment_reply then
-        vim.notify("No comment reply found;", 2)
+        vim.notify("No comment reply found;", 3)
         return
     end
 
     vim.ui.select(thread_status, { prompt = "Select new status;" }, function(choice)
         if not choice then
-            vim.notify("No new status chosen;", 2)
+            vim.notify("No new status chosen;", 3)
             return
         end
 
@@ -269,7 +269,7 @@ function M.submit_comment(state, _)
         end
         return
     end
-    vim.notify("No comment found to create or reply to;", 2)
+    vim.notify("No comment found to create or reply to;", 3)
 end
 
 return M

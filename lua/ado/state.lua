@@ -39,7 +39,7 @@ function AdoState:new(repository, pull_request)
     self.__index = self
     self = setmetatable(o, self)
     self:load_pull_request_iterations()
-    self:load_pull_request_threads()
+    self:load_pull_request_threads({})
     return self
 end
 

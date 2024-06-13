@@ -8,10 +8,6 @@ function M.get_loaded_state()
     return state_manager.state
 end
 
----@class SubCommand
----@field impl fun(args:string[], opts: table)
----@field complete_args? string[]
-
 local function completer(load_args, arg_lead)
     return vim.iter(load_args)
         :filter(function(load_arg)
@@ -19,6 +15,7 @@ local function completer(load_args, arg_lead)
         end)
         :totable()
 end
+
 ---@param sub_impl string[]
 ---@param subcommand_args string[]
 ---@param subcommand string
@@ -33,23 +30,29 @@ local function prompt_target(sub_impl, subcommand_args, subcommand)
         end)
         return
     end
-    sub_impl[subcommand_args[1]]()
+    local load_opts = function() return load("return " .. (subcommand_args[2] or ""), 't')() end
+    local ok, opts = pcall(load_opts)
+    sub_impl[subcommand_args[1]](ok and opts or {})
 end
+
+---@class SubCommand
+---@field impl fun(args:string[])
+---@field complete_args? string[]
 
 ---@type table<string, SubCommand>
 local subcommand_tbl = {
     load = {
         complete_args = { "context", "threads" },
-        impl = function(args, opts)
+        impl = function(args)
             local sub_impl = {
-                context = function()
+                context = function(opts)
                     if not state_manager then
                         local context = require("ado.state").AdoContext:new()
                         state_manager = require("ado.state").StateManager:new(context)
                     end
                     state_manager:choose_and_activate(opts)
                 end,
-                threads = function()
+                threads = function(opts)
                     M.get_loaded_state():load_pull_request_threads(opts)
                 end,
             }
@@ -58,15 +61,15 @@ local subcommand_tbl = {
     },
     submit = {
         complete_args = { "comment", "vote", "thread_status" },
-        impl = function(args, opts)
+        impl = function(args)
             local sub_impl = {
-                comment = function()
+                comment = function(opts)
                     require("ado.thread").submit_comment(M.get_loaded_state(), opts)
                 end,
-                vote = function()
+                vote = function(opts)
                     require("ado.review").submit_vote(M.get_loaded_state(), opts)
                 end,
-                thread_status = function()
+                thread_status = function(opts)
                     require("ado.thread").update_thread_status(M.get_loaded_state(), opts)
                 end,
             }
@@ -75,18 +78,18 @@ local subcommand_tbl = {
     },
     open = {
         complete_args = { "quickfix", "thread_picker", "new_thread", "existing_thread" },
-        impl = function(args, opts)
+        impl = function(args)
             local sub_impl = {
-                quickfix = function()
+                quickfix = function(opts)
                     require("ado.quickfix").render_quickfix(M.get_loaded_state().pull_request_threads, opts)
                 end,
-                thread_picker = function()
+                thread_picker = function(opts)
                     require("ado.pickers.thread").choose_thread(M.get_loaded_state(), opts)
                 end,
-                new_thread = function()
+                new_thread = function(opts)
                     require("ado.thread").new_thread_window(M.get_loaded_state(), opts)
                 end,
-                existing_thread = function()
+                existing_thread = function(opts)
                     require("ado.thread").open_thread_window(M.get_loaded_state(), opts)
                 end,
             }
@@ -114,7 +117,7 @@ function M.ado_pure(opts)
         end)
         return
     end
-    subcommand.impl(args, opts)
+    subcommand.impl(args)
 end
 
 function M.auto_completer(arg_lead, cmdline, _)
