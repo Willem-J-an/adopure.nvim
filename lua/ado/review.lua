@@ -30,18 +30,23 @@ end
 ---Submit vote of choice on pull request
 ---@param state AdoState
 ---@param _ table
-function M.submit_vote(state,_)
+function M.submit_vote(state, _)
     vim.ui.select(vim.tbl_keys(M.pull_request_vote), { prompt = "Select vote;" }, function(vote)
         if not vote then
             vim.notify("No vote chosen;", 2)
             return
         end
-        local reviewer, err = require("ado.api").submit_vote(state.active_pull_request, M.pull_request_vote[vote])
-
-        if err or not reviewer then
+        local new_reviewer, err = require("ado.api").submit_vote(state.active_pull_request, M.pull_request_vote[vote])
+        if err or not new_reviewer then
             error(err or "Expected Reviewer but not nil;")
         end
-        -- TODO: Render vote somewhere?
+        for _, reviewer in pairs(state.active_pull_request.reviewers) do
+            if reviewer.displayName == new_reviewer.displayName then
+                reviewer.vote = new_reviewer.vote
+                return
+            end
+        end
+        table.insert(state.active_pull_request.reviewers, new_reviewer)
     end)
 end
 

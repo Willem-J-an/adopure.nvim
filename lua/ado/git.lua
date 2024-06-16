@@ -1,20 +1,5 @@
 local M = {}
 
----Get git repository name
----@return string Repository name
-function M.get_repo_name()
-    local get_git_repo_job = require("plenary.job"):new({
-        command = "git",
-        args = { "rev-parse", "--show-toplevel" },
-        cwd = ".",
-    })
-    get_git_repo_job:start()
-
-    local repository_path = require("plenary.path"):new(require("ado.utils").await_result(get_git_repo_job)[1])
-    local path_parts = vim.split(repository_path.filename, repository_path.path.sep)
-    return path_parts[#path_parts]
-end
-
 ---@param remote_url string
 ---@return string organization_url
 ---@return string project_name

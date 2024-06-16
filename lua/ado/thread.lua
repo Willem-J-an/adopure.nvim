@@ -51,6 +51,16 @@ local function get_pull_request_comment_thread_context(state, thread_context)
     return nil, "File not changed in this Pull Request;"
 end
 
+---@param bufnr number
+---@param mark_id number
+---@param state AdoState
+---@param thread_to_open Thread
+local function add_comment_reply(bufnr, mark_id, state, thread_to_open)
+    ---@type CommentReply
+    local comment_reply = { bufnr = bufnr, mark_id = mark_id, thread = thread_to_open }
+    table.insert(state.comment_replies, comment_reply)
+end
+
 ---@param state AdoState
 ---@param bufnr number
 ---@param comment_creation CommentCreate
@@ -80,7 +90,9 @@ local function submit_thread(state, bufnr, comment_creation)
         return err or "Expected Thread but got nil;"
     end
     table.insert(state.pull_request_threads, thread)
-    require("ado.render").render_reply_thread(namespace, thread)
+    local mark_id
+    bufnr, mark_id = require("ado.render").render_reply_thread(namespace, thread)
+    add_comment_reply(bufnr, mark_id, state, thread)
 end
 
 ---@return number line_start, number col_start, number line_end, number col_end
@@ -176,9 +188,7 @@ function M.open_thread_window(state, opts)
         return
     end
     local bufnr, mark_id = require("ado.render").render_reply_thread(namespace, thread_to_open)
-    ---@type CommentReply
-    local comment_reply = { bufnr = bufnr, mark_id = mark_id, thread = thread_to_open }
-    table.insert(state.comment_replies, comment_reply)
+    add_comment_reply(bufnr, mark_id, state, thread_to_open)
 end
 
 ---@param bufnr number
@@ -231,8 +241,7 @@ function M.update_thread_status(state, _)
         end
 
         ---@type Thread
-        ---@diagnostic disable-next-line: missing-fields
-        local thread = {
+        local thread = { ---@diagnostic disable-line: missing-fields
             id = comment_reply.thread.id,
             status = choice,
         }
@@ -258,6 +267,11 @@ function M.submit_comment(state, _)
         if err then
             error(err)
         end
+        state.comment_creations = vim.iter(state.comment_creations)
+            :filter(function(state_comment_creation) ---@param state_comment_creation CommentCreate
+                return comment_creation.bufnr ~= state_comment_creation.bufnr
+            end)
+            :totable()
         return
     end
 

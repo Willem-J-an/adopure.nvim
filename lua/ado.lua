@@ -19,7 +19,7 @@ end
 ---@param sub_impl string[]
 ---@param subcommand_args string[]
 ---@param subcommand string
-local function prompt_target(sub_impl, subcommand_args, subcommand)
+local function execute_or_prompt(sub_impl, subcommand_args, subcommand)
     if #subcommand_args == 0 then
         vim.ui.select(vim.tbl_keys(sub_impl), { "Choose target" }, function(choice)
             if not choice then
@@ -30,7 +30,9 @@ local function prompt_target(sub_impl, subcommand_args, subcommand)
         end)
         return
     end
-    local load_opts = function() return load("return " .. (subcommand_args[2] or ""), 't')() end
+    local load_opts = function()
+        return load("return " .. (subcommand_args[2] or ""), "t")()
+    end
     local ok, opts = pcall(load_opts)
     sub_impl[subcommand_args[1]](ok and opts or {})
 end
@@ -39,6 +41,17 @@ end
 ---@field impl fun(args:string[])
 ---@field complete_args? string[]
 
+---Initial load of state_manager with all open PRs;
+---@return StateManager
+function M.load_state_manager()
+    if not state_manager then
+        local context = require("ado.state").AdoContext:new()
+        state_manager = require("ado.state").StateManager:new(context)
+    end
+    assert(state_manager, "StateManager should not be nil after loading;")
+    return state_manager
+end
+
 ---@type table<string, SubCommand>
 local subcommand_tbl = {
     load = {
@@ -46,17 +59,14 @@ local subcommand_tbl = {
         impl = function(args)
             local sub_impl = {
                 context = function(opts)
-                    if not state_manager then
-                        local context = require("ado.state").AdoContext:new()
-                        state_manager = require("ado.state").StateManager:new(context)
-                    end
-                    state_manager:choose_and_activate(opts)
+                    local manager = M.load_state_manager()
+                    manager:choose_and_activate(opts)
                 end,
                 threads = function(opts)
                     M.get_loaded_state():load_pull_request_threads(opts)
                 end,
             }
-            prompt_target(sub_impl, args, "load")
+            execute_or_prompt(sub_impl, args, "load")
         end,
     },
     submit = {
@@ -73,7 +83,7 @@ local subcommand_tbl = {
                     require("ado.thread").update_thread_status(M.get_loaded_state(), opts)
                 end,
             }
-            prompt_target(sub_impl, args, "submit")
+            execute_or_prompt(sub_impl, args, "submit")
         end,
     },
     open = {
@@ -93,7 +103,7 @@ local subcommand_tbl = {
                     require("ado.thread").open_thread_window(M.get_loaded_state(), opts)
                 end,
             }
-            prompt_target(sub_impl, args, "open")
+            execute_or_prompt(sub_impl, args, "open")
         end,
     },
 }

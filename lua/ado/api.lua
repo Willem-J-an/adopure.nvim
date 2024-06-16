@@ -108,14 +108,14 @@ function M.get_pull_requests_iteration_changes(pull_request, iteration)
     return result.changeEntries, err
 end
 
----Get pull request threads from Azure DevOps
----@param pull_request PullRequest
+---Get not deleted pull request threads from Azure DevOps
+---@param state AdoState
 ---@return Thread[] threads, string|nil err
-function M.get_pull_request_threads(pull_request)
-    local iteration = "$baseIteration=1&iteration=6"
+function M.get_pull_request_threads(state)
+    local iteration = "$baseIteration=1&iteration=" .. state.active_pull_request_iteration.id
     ---@type RequestResult
     local result, err = get_azure_devops(
-        pull_request.url .. "/threads?" .. table.concat({ GIT_API_VERSION, iteration }, "&"),
+        state.active_pull_request.url .. "/threads?" .. table.concat({ GIT_API_VERSION, iteration }, "&"),
         "pull request threads"
     )
     if not result then
@@ -124,7 +124,12 @@ function M.get_pull_request_threads(pull_request)
 
     ---@type Thread[]
     local threads = result.value
-    return threads, err
+    local active_threads = vim.iter(threads)
+        :filter(function(thread) ---@param thread Thread
+            return not thread.isDeleted
+        end)
+        :totable()
+    return active_threads, err
 end
 
 ---patch request to azure devops
@@ -145,9 +150,12 @@ local function submit_azure_devops(url, http_verb, request_type, body)
         end
         return nil, "Failed to " .. http_verb .. " " .. request_type .. "; " .. details
     end
-    ---@type Thread|Comment|Reviewer|nil
-    local result = vim.fn.json_decode(response.body)
-    return result, nil
+    if type(response.body) == "string" and #response.body ~=0 then
+        ---@type Thread|Comment|Reviewer|nil
+        local result = vim.fn.json_decode(response.body)
+        return result, nil
+    end
+    return nil, nil
 end
 
 ---Create new pull request comment thread
@@ -198,6 +206,22 @@ function M.update_pull_request_thread(pull_request, thread)
     return result, err
 end
 
+---Create new pull request comment reply
+---@param pull_request PullRequest
+---@param thread Thread
+---@param comment_id number
+---@return Thread|nil thread, string|nil err
+function M.delete_pull_request_comment(pull_request, thread, comment_id)
+    ---@type Thread|nil
+    local result, err = submit_azure_devops(
+        table.concat({ pull_request.url, "/threads/", thread.id, "/comments/", comment_id, "?", GIT_API_VERSION }),
+        "DELETE",
+        "pull request thread update",
+        nil
+    )
+    return result, err
+end
+
 ---Create new pull request vote
 ---@param pull_request PullRequest
 ---@param vote PullRequestVote
@@ -221,4 +245,5 @@ function M.submit_vote(pull_request, vote)
     )
     return result, err
 end
+
 return M

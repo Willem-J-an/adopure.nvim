@@ -1,0 +1,13 @@
+return {
+  _all = {
+    coverage = false,
+    lpath = "~/.luarocks/share/lua/5.1/?.lua;~/.luarocks/share/lua/5.1/?/init.lua;./lua_modules/share/lua/5.1/?.lua;./lua_modules/share/lua/5.1/?/init.lua;lua/?.lua;lua/?/init.lua",
+    lua = "~/.luarocks/bin/nlua",
+  },
+  default = {
+    verbose = true
+  },
+  tests = {
+    verbose = true
+  },
+}

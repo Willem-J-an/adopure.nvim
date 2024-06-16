@@ -53,7 +53,7 @@ end
 
 ---@param _ table
 function AdoState:load_pull_request_threads(_)
-    local pull_request_threads, err = require("ado.api").get_pull_request_threads(self.active_pull_request)
+    local pull_request_threads, err = require("ado.api").get_pull_request_threads(self)
     if err then
         error(err)
     end

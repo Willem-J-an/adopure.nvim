@@ -19,7 +19,7 @@ function InternalConfig:access_token()
         "or check the docs to find other ways of configuring it.",
     }, " ")
     assert(self.pat_token, message)
-    return require("b64").enc(":" .. self.pat_token)
+    return vim.base64.encode(":" .. self.pat_token)
 end
 
 local config = InternalConfig:new()
