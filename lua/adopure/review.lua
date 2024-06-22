@@ -36,7 +36,8 @@ function M.submit_vote(state, _)
             vim.notify("No vote chosen;", 2)
             return
         end
-        local new_reviewer, err = require("adopure.api").submit_vote(state.active_pull_request, M.pull_request_vote[vote])
+        local new_reviewer, err =
+            require("adopure.api").submit_vote(state.active_pull_request, M.pull_request_vote[vote])
         if err or not new_reviewer then
             error(err or "Expected Reviewer but not nil;")
         end

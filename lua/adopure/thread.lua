@@ -13,8 +13,11 @@ local function submit_thread_reply(state, bufnr, comment_reply)
         content = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n"),
         commentType = 1,
     }
-    local comment, err =
-        require("adopure.api").create_pull_request_comment_reply(state.active_pull_request, comment_reply.thread, new_reply)
+    local comment, err = require("adopure.api").create_pull_request_comment_reply(
+        state.active_pull_request,
+        comment_reply.thread,
+        new_reply
+    )
     if err or not comment then
         return err or "Expected Comment but not nil;"
     end
