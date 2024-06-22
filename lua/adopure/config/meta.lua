@@ -7,6 +7,7 @@
 ---@class adopure.Config
 ---@field pat_token? string
 ---@field hl_groups? adopure.Highlights
+---@field preferred_remotes? string[]
 
 local config = {}
 

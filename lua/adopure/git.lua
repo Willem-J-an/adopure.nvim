@@ -1,30 +1,47 @@
 local M = {}
 
----@param remote_url string
+---@param remote_stdout string[]
+---@return string remote
+local function elect_remote(remote_stdout)
+    local preferred_remotes = require("adopure.config.internal").preferred_remotes
+    for _, remote_line in ipairs(remote_stdout) do
+        local name_and_details = vim.split(remote_line, "\t")
+        local remote_name = name_and_details[1]
+        if vim.tbl_contains(preferred_remotes, remote_name) then
+            return remote_line
+        end
+    end
+    for _, remote_line in ipairs(remote_stdout) do
+        if remote_line:find("azure.com") or remote_line:find("visualstudio.com") then
+            return remote_line
+        end
+    end
+    vim.notify("adopure unable to elect azure devops remote url; taking the first", 3)
+    return remote_stdout[1]
+end
+
+---@param remote_stdout string
 ---@return string organization_url
 ---@return string project_name
 ---@return string repository_name
-local function extract_git_details(remote_url)
-    local organization_url, project_name, repository_name
-    if remote_url:find("@ssh.dev.azure.com") then
-        local _, _, base_url, org_name, project_name_extracted, repo_name_extracted =
-            remote_url:find(".-@(ssh.dev.azure.com):v3/(.-)/(.-)/(.+)%s*%(fetch%)")
-        organization_url = "https://" .. base_url:gsub("ssh.", "") .. "/" .. org_name
-        project_name = project_name_extracted
-        repository_name = repo_name_extracted
-    elseif remote_url:find("https") then
-        local https_pattern = "(https://)[^@]*@([^/]+)/([^/]+)/([^/]+)/_git/([^%s]+)"
-        local _, _, protocol, domain, org_name, project_name_extracted, repo_name_extracted =
-            remote_url:find(https_pattern)
-        organization_url = protocol .. domain .. "/" .. org_name
-        project_name = project_name_extracted
-        repository_name = repo_name_extracted
+local function extract_git_details(remote_stdout)
+    local host, project_name, repository_name, organization_name
+    local url_with_type = vim.split(remote_stdout, "\t")[2]
+    local url = vim.split(url_with_type, " ")[1]
+    if url:find("@ssh") then
+        local ssh_base
+        ssh_base, organization_name, project_name, repository_name = unpack(vim.split(url, "/"))
+        host = vim.split(vim.split(ssh_base, ":")[1], "@ssh.")[2]
     end
-
-    local trim_pattern = "^%s*(.-)%s*$"
-    return organization_url:gsub(trim_pattern, "%1") .. "/",
-        project_name:gsub(trim_pattern, "%1"),
-        repository_name:gsub(trim_pattern, "%1")
+    if remote_stdout:find("https://") then
+        local https_base, user_domain
+        https_base, repository_name = unpack(vim.split(url, "/_git/"))
+        user_domain, organization_name, project_name = unpack(vim.split(https_base, "/"), 3)
+        local user_at_host_parts = vim.split(user_domain, "@")
+        host = user_at_host_parts[#user_at_host_parts]
+    end
+    local organization_url = table.concat({ "https://", host, "/", organization_name, "/" })
+    return organization_url, project_name, repository_name
 end
 
 ---Get config from git remote
@@ -38,9 +55,16 @@ function M.get_remote_config()
         cwd = ".",
     })
     get_remotes:start()
-    ---@type string
-    local remote = require("adopure.utils").await_result(get_remotes)[1]
-    return extract_git_details(remote)
+    local result = require("adopure.utils").await_result(get_remotes)
+    if result.stderr[1] then
+        if not result.stdout[1] then
+            error(result.stderr[1])
+        end
+        vim.notify(result.stderr[1], 3)
+    end
+    assert(result.stdout[1], "No remote found to extract details;")
+    local elected_remote = elect_remote(result.stdout)
+    return extract_git_details(elected_remote)
 end
 
 ---@param pull_request adopure.PullRequest

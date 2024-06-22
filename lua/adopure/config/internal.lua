@@ -7,10 +7,10 @@
 ---@class adopure.InternalConfig
 ---@field pat_token string|nil
 ---@field hl_groups adopure.InternalHighlights
+---@field preferred_remotes string[]
 
 local InternalConfig = {}
 function InternalConfig:new()
-    ---@type adopure.InternalConfig
     local default_config = {
         pat_token = os.getenv("AZURE_DEVOPS_EXT_PAT"),
         hl_groups = {
@@ -19,6 +19,7 @@ function InternalConfig:new()
             inactive = "DiagnosticUnderlineOk",
             inactive_sign = "@comment.note",
         },
+        preferred_remotes = {},
     }
     local user_config = type(vim.g.adopure) == "function" and vim.g.adopure() or vim.g.adopure or {}
     local config = vim.tbl_deep_extend("force", default_config, user_config or {})
