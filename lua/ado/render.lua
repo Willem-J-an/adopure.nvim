@@ -1,7 +1,9 @@
 local M = {}
-local buffer_name = "ado.nvim]"
+local buffer_counter = 0
 
-function M.rightsize_window(namespace)
+local namespace = vim.api.nvim_create_namespace("adopure-render")
+
+local function rightsize_window()
     local extmarks = vim.api.nvim_buf_get_extmarks(0, namespace, 0, -1, { details = true })
     local line_count = 0
     for _, extmark in pairs(extmarks) do
@@ -18,21 +20,22 @@ function M.rightsize_window(namespace)
 end
 
 ---Open split window
-function M.open_split(namespace)
-    local split = require("nui.split")({
-        relative = "win",
-        position = "bottom",
-        size = "25%",
-    })
-    split:mount()
+---@param bufname string
+---@return number bufnr
+local function open_new_split(bufname)
+    vim.cmd("below new " .. bufname)
+    vim.api.nvim_buf_set_option(0, 'buftype', 'nofile')
+    buffer_counter = buffer_counter + 1
     vim.cmd(":setlocal wrap")
 
     vim.api.nvim_create_autocmd({ "BufEnter" }, {
         buffer = 0,
         callback = function()
-            M.rightsize_window(namespace)
+            rightsize_window()
         end,
     })
+
+    return vim.api.nvim_get_current_buf()
 end
 
 local function split_long_lines(line)
@@ -59,20 +62,27 @@ local function add_prompt_lines(lines, prompt_type)
     return lines
 end
 
-local function new_or_clear_ado_window(namespace)
+---@param new_bufname string
+---@return number bufnr
+local function convert_ado_window(new_bufname)
     local bufnr = vim.api.nvim_get_current_buf()
-    if not vim.api.nvim_buf_get_name(0):match(buffer_name .. "$") then
-        M.open_split(namespace)
-        bufnr = vim.api.nvim_get_current_buf()
-        vim.api.nvim_buf_set_name(0, "[" .. bufnr .. "-" .. buffer_name)
-    end
     for _, extmark in pairs(vim.api.nvim_buf_get_extmarks(bufnr, namespace, 0, -1, {})) do
         local extmark_id = extmark[1]
         vim.api.nvim_buf_del_extmark(bufnr, namespace, extmark_id)
     end
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, {})
-    vim.cmd(":startinsert")
+
+    vim.api.nvim_buf_set_name(0, new_bufname)
     return bufnr
+end
+
+---@param new_bufname string
+---@return number bufnr
+local function new_or_convert_window(new_bufname)
+    if vim.api.nvim_buf_get_name(0):find("%[adopure %- new %-") then
+        return convert_ado_window(new_bufname)
+    end
+    return open_new_split(new_bufname)
 end
 
 local icons = {
@@ -84,16 +94,16 @@ local icons = {
     unknown = " ",
     wontFix = "󰅜 ",
 }
+
 ---Render pull request thread
----@param namespace number
 ---@param pull_request_thread Thread
 ---@return number, number: bufnr, mark_id
-function M.render_reply_thread(namespace, pull_request_thread)
-    local bufnr = new_or_clear_ado_window(namespace)
+function M.render_reply_thread(pull_request_thread)
+    local bufnr = new_or_convert_window("[adopure - thread - " .. pull_request_thread.id .. "]")
     local lines = {
         { { "Comment thread: ", "@text.strong" }, { tostring(pull_request_thread.id), "@text.reference" } },
         {
-            { "Status: ",                                                                       "@text.strong" },
+            { "Status: ", "@text.strong" },
             { icons[pull_request_thread.status] .. " - [" .. pull_request_thread.status .. "]", "@text.reference" },
         },
         { { "", "@text.literal" } },
@@ -115,19 +125,18 @@ function M.render_reply_thread(namespace, pull_request_thread)
         virt_lines = lines,
         virt_lines_above = true,
     })
-    M.rightsize_window(namespace)
+    rightsize_window()
     return bufnr, mark_id
 end
 
 ---Render new pull request thread
----@param namespace number
 ---@param selection string[]
 ---@return number, number: bufnr, mark_id
-function M.render_new_thread(namespace, selection)
-    local bufnr = new_or_clear_ado_window(namespace)
+function M.render_new_thread(selection)
+    local bufnr = open_new_split("[adopure - new - " .. buffer_counter .. "]")
     local lines = {
         { { "Comment thread: ", "@text.strong" }, { "<new>", "@text.reference" } },
-        { { "Status: ", "@text.strong" },         { "<new>", "@text.reference" } },
+        { { "Status: ", "@text.strong" }, { "<new>", "@text.reference" } },
         { { "Selection:", "@text.strong" } },
     }
     for _, selection_line in pairs(selection) do
@@ -139,7 +148,8 @@ function M.render_new_thread(namespace, selection)
         virt_lines = lines,
         virt_lines_above = true,
     })
-    M.rightsize_window(namespace)
+    rightsize_window()
+    vim.cmd(":startinsert")
     return bufnr, mark_id
 end
 

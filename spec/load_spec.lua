@@ -1,3 +1,5 @@
+local assert = require("luassert.assert")
+
 describe("Load command", function()
     ---@type StateManager|nil
     local state_manager
@@ -13,7 +15,7 @@ describe("Load command", function()
 
     setup(function() ---@diagnostic disable-line: undefined-global
         local secret = get_secret_value()
-        vim.g.adopure = { pat_token = secret }
+        vim.g.adopure = { pat_token = secret } ---@diagnostic disable-line inject-field
     end)
 
     it("can retrieve PRs", function()
@@ -29,4 +31,3 @@ describe("Load command", function()
         assert.are.same(state_manager.state.active_pull_request.title, "Updated pr-test-file.md PR title")
     end)
 end)
-

@@ -1,3 +1,5 @@
+local assert = require("luassert.assert")
+
 describe("submit command", function()
     local function get_secret_value()
         local secret = os.getenv("AZURE_DEVOPS_EXT_PAT")
@@ -5,13 +7,15 @@ describe("submit command", function()
             return secret
         end
         local handle = io.popen("pass show AZURE_DEVOPS_EXT_PAT_ADOPURE")
-        assert(handle, "Handle not nil;")
+        if not handle then
+            error("Handle not nil;")
+        end
         return handle:read()
     end
 
-    setup(function() ---@diagnostic disable-line: undefined-global
+    setup(function()
         local secret = get_secret_value()
-        vim.g.adopure = { pat_token = secret }
+        vim.g.adopure = { pat_token = secret } ---@diagnostic disable-line: inject-field
     end)
 
     local expect_message = "This will be the written comment in the PR!"
@@ -31,6 +35,7 @@ describe("submit command", function()
         ---@param cb fun(choice: string):nil
         ---@diagnostic disable-next-line: unused-local
         vim.ui.select = function(_1, _2, cb) ---@diagnostic disable-line: duplicate-set-field
+            local _, _ = _1, _2
             cb("closed")
         end
     end
@@ -87,12 +92,13 @@ describe("submit command", function()
         local state = require("ado").get_loaded_state()
         ---@diagnostic disable-next-line: unused-local
         vim.ui.select = function(_1, _2, cb) ---@diagnostic disable-line: duplicate-set-field
+            local _, _ = _1, _2
             cb("approved")
         end
         require("ado.review").submit_vote(state, {})
         assert.are.same(10, state.active_pull_request.reviewers[1].vote)
-        ---@diagnostic disable-next-line: unused-local
         vim.ui.select = function(_1, _2, cb) ---@diagnostic disable-line: duplicate-set-field
+            local _, _ = _1, _2
             cb("no vote")
         end
         require("ado.review").submit_vote(state, {})

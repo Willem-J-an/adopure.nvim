@@ -5,6 +5,7 @@ local M = {
     thread_extmarks = {},
 }
 local Path = require("plenary.path")
+local namespace = vim.api.nvim_create_namespace("adopure-marker")
 
 ---Get open file paths with bufnrs
 ---@diagnostic disable-next-line: undefined-doc-name
@@ -30,20 +31,20 @@ local signs = {
     wontFix = "󰗞 ",
 }
 ---@param bufnr number
----@param namespace number
 ---@param pull_request_thread Thread
 ---@param context ThreadContext
-local function create_extmark(bufnr, namespace, pull_request_thread, context)
+local function create_extmark(bufnr, pull_request_thread, context)
     local end_offset = context.rightFileEnd.offset
     local status = pull_request_thread.status
     local hl_group, sign_hl_group
 
+    local hl_groups = require("ado.config.internal").hl_groups
     if status == "active" or status == "pending" then
-        hl_group = "AdoPrActive"
-        sign_hl_group = "@comment.todo"
+        hl_group = hl_groups.active
+        sign_hl_group = hl_groups.active_sign
     else
-        hl_group = "AdoPrClosed"
-        sign_hl_group = "@comment.note"
+        hl_group = hl_groups.inactive
+        sign_hl_group = hl_groups.inactive_sign
     end
     local opts = {
         id = pull_request_thread.id,
@@ -52,9 +53,11 @@ local function create_extmark(bufnr, namespace, pull_request_thread, context)
         hl_group = hl_group,
         sign_hl_group = sign_hl_group,
         sign_text = signs[status],
+        hl_eol = false,
     }
     if end_offset == 2147483647 then
-        opts["end_col"] = nil
+        opts.end_row = context.rightFileEnd.line
+        opts.end_col = 0
     end
     local extmark = vim.api.nvim_buf_set_extmark(
         bufnr,
@@ -67,9 +70,13 @@ local function create_extmark(bufnr, namespace, pull_request_thread, context)
 end
 
 ---Create extmarks for pull request threads
----@param namespace number
 ---@param pull_request_threads Thread[]
-function M.create_buffer_extmarks(namespace, pull_request_threads)
+function M.create_buffer_extmarks(pull_request_threads)
+    for _, extmark in pairs(vim.api.nvim_buf_get_extmarks(0, namespace, 0, -1, {})) do
+        local extmark_id = extmark[1]
+        vim.api.nvim_buf_del_extmark(0, namespace, extmark_id)
+    end
+
     local focused_file_path = Path:new(vim.fn.expand("%:."))
     for _, pull_request_thread in ipairs(pull_request_threads) do
         local open_file_paths = get_open_file_paths()
@@ -89,14 +96,14 @@ function M.create_buffer_extmarks(namespace, pull_request_threads)
         then
             --- Due to a bug in azure devops rest api; creating extmarks may fail for incorrect positions;
             ---https://developercommunity.visualstudio.com/t/Pull-Request-Threads---List-API-operatio/10628358
-            pcall(create_extmark, open_file_paths[file_path:absolute()], namespace, pull_request_thread, context)
+            pcall(create_extmark, open_file_paths[file_path:absolute()], pull_request_thread, context)
         end
     end
 end
 
 ---Get extmarks at the cursor position
 ---@return table<number, number, number>[]: extmark_id, row, col
-function M.get_extmarks_at_position(namespace)
+function M.get_extmarks_at_position()
     local line = vim.api.nvim_win_get_cursor(0)[1] - 1
     local buffer_marks = vim.api.nvim_buf_get_extmarks(0, namespace, { line, 0 }, { line + 1, 0 }, {})
     return buffer_marks

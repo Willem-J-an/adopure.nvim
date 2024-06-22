@@ -6,13 +6,11 @@ source = {
 }
 dependencies = {
 	"plenary.nvim",
-	"nui.nvim",
 	"telescope.nvim",
 }
 test_dependencies = {
 	"nlua",
 	"plenary.nvim",
-	"nui.nvim",
 	"telescope.nvim",
 }
 build = {

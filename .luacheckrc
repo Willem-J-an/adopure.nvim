@@ -19,4 +19,4 @@ read_globals = {
 	"pcall",
 	"load",
 }
-exclude_files = {"lua_modules/*", "spec/submit_spec.lua"}
+exclude_files = {"lua_modules/*"}

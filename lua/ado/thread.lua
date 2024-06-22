@@ -1,7 +1,5 @@
 local M = {}
 
-local namespace = vim.api.nvim_create_namespace("ado")
-
 ---@param state AdoState
 ---@param bufnr number
 ---@param comment_reply CommentReply
@@ -21,7 +19,7 @@ local function submit_thread_reply(state, bufnr, comment_reply)
         return err or "Expected Comment but not nil;"
     end
     table.insert(comments, comment)
-    require("ado.render").render_reply_thread(namespace, comment_reply.thread)
+    require("ado.render").render_reply_thread(comment_reply.thread)
 end
 
 ---@param state AdoState
@@ -91,7 +89,7 @@ local function submit_thread(state, bufnr, comment_creation)
     end
     table.insert(state.pull_request_threads, thread)
     local mark_id
-    bufnr, mark_id = require("ado.render").render_reply_thread(namespace, thread)
+    bufnr, mark_id = require("ado.render").render_reply_thread(thread)
     add_comment_reply(bufnr, mark_id, state, thread)
 end
 
@@ -152,7 +150,7 @@ function M.new_thread_window(state, _)
     end
     local thread_context = get_thread_context(col_end, col_start, line_end, line_start)
 
-    local bufnr, mark_id = require("ado.render").render_new_thread(namespace, selection)
+    local bufnr, mark_id = require("ado.render").render_new_thread(selection)
 
     ---@type CommentCreate
     local comment_creation = {
@@ -171,7 +169,7 @@ end
 function M.open_thread_window(state, opts)
     local extmark_id = opts.thread_id
     if not extmark_id then
-        local extmarks = require("ado.marker").get_extmarks_at_position(namespace)
+        local extmarks = require("ado.marker").get_extmarks_at_position()
         local first_extmark = extmarks[1]
         extmark_id = first_extmark[1]
     end
@@ -187,7 +185,7 @@ function M.open_thread_window(state, opts)
         vim.notify("Did not find thread to open;", 3)
         return
     end
-    local bufnr, mark_id = require("ado.render").render_reply_thread(namespace, thread_to_open)
+    local bufnr, mark_id = require("ado.render").render_reply_thread(thread_to_open)
     add_comment_reply(bufnr, mark_id, state, thread_to_open)
 end
 
@@ -250,7 +248,7 @@ function M.update_thread_status(state, _)
             error(err or "Expected Thread but not nil;")
         end
         comment_reply.thread.status = updated_thread.status
-        require("ado.render").render_reply_thread(namespace, comment_reply.thread)
+        require("ado.render").render_reply_thread(comment_reply.thread)
     end)
 end
 

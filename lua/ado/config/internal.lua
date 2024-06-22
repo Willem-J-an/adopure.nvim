@@ -1,9 +1,24 @@
+---@class adopure.InternalHighlights
+---@field active string
+---@field active_sign string
+---@field inactive string
+---@field inactive_sign string
+
 ---@class adopure.InternalConfig
 ---@field pat_token string|nil
+---@field hl_groups adopure.InternalHighlights
+
 local InternalConfig = {}
 function InternalConfig:new()
+    ---@type adopure.InternalConfig
     local default_config = {
         pat_token = os.getenv("AZURE_DEVOPS_EXT_PAT"),
+        hl_groups = {
+            active = "DiagnosticUnderlineWarn",
+            active_sign = "@comment.todo",
+            inactive = "DiagnosticUnderlineOk",
+            inactive_sign = "@comment.note",
+        },
     }
     local user_config = type(vim.g.adopure) == "function" and vim.g.adopure() or vim.g.adopure or {}
     local config = vim.tbl_deep_extend("force", default_config, user_config or {})
