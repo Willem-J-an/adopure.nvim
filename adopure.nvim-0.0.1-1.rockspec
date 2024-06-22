@@ -2,7 +2,7 @@ rockspec_format = "3.0"
 package = "adopure.nvim"
 version = "0.0.1-1"
 source = {
-	url = "git+https://github.com/Willem-J-an/ado.nvim",
+	url = "git+https://github.com/Willem-J-an/adopure.nvim",
 }
 dependencies = {
 	"plenary.nvim",

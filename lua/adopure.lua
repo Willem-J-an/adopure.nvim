@@ -1,8 +1,8 @@
 local M = {}
 
----@type StateManager|nil
+---@type adopure.StateManager|nil
 local state_manager
----@return AdoState
+---@return adopure.AdoState
 function M.get_loaded_state()
     assert(state_manager and state_manager.state, "Choose and activate a pull request first;")
     return state_manager.state
@@ -37,22 +37,22 @@ local function execute_or_prompt(sub_impl, subcommand_args, subcommand)
     sub_impl[subcommand_args[1]](ok and opts or {})
 end
 
----@class SubCommand
+---@class adopure.SubCommand
 ---@field impl fun(args:string[])
 ---@field complete_args? string[]
 
 ---Initial load of state_manager with all open PRs;
----@return StateManager
+---@return adopure.StateManager
 function M.load_state_manager()
     if not state_manager then
-        local context = require("ado.state").AdoContext:new()
-        state_manager = require("ado.state").StateManager:new(context)
+        local context = require("adopure.state").AdoContext:new()
+        state_manager = require("adopure.state").StateManager:new(context)
     end
     assert(state_manager, "StateManager should not be nil after loading;")
     return state_manager
 end
 
----@type table<string, SubCommand>
+---@type table<string, adopure.SubCommand>
 local subcommand_tbl = {
     load = {
         complete_args = { "context", "threads" },
@@ -74,13 +74,13 @@ local subcommand_tbl = {
         impl = function(args)
             local sub_impl = {
                 comment = function(opts)
-                    require("ado.thread").submit_comment(M.get_loaded_state(), opts)
+                    require("adopure.thread").submit_comment(M.get_loaded_state(), opts)
                 end,
                 vote = function(opts)
-                    require("ado.review").submit_vote(M.get_loaded_state(), opts)
+                    require("adopure.review").submit_vote(M.get_loaded_state(), opts)
                 end,
                 thread_status = function(opts)
-                    require("ado.thread").update_thread_status(M.get_loaded_state(), opts)
+                    require("adopure.thread").update_thread_status(M.get_loaded_state(), opts)
                 end,
             }
             execute_or_prompt(sub_impl, args, "submit")
@@ -91,16 +91,16 @@ local subcommand_tbl = {
         impl = function(args)
             local sub_impl = {
                 quickfix = function(opts)
-                    require("ado.quickfix").render_quickfix(M.get_loaded_state().pull_request_threads, opts)
+                    require("adopure.quickfix").render_quickfix(M.get_loaded_state().pull_request_threads, opts)
                 end,
                 thread_picker = function(opts)
-                    require("ado.pickers.thread").choose_thread(M.get_loaded_state(), opts)
+                    require("adopure.pickers.thread").choose_thread(M.get_loaded_state(), opts)
                 end,
                 new_thread = function(opts)
-                    require("ado.thread").new_thread_window(M.get_loaded_state(), opts)
+                    require("adopure.thread").new_thread_window(M.get_loaded_state(), opts)
                 end,
                 existing_thread = function(opts)
-                    require("ado.thread").open_thread_window(M.get_loaded_state(), opts)
+                    require("adopure.thread").open_thread_window(M.get_loaded_state(), opts)
                 end,
             }
             execute_or_prompt(sub_impl, args, "open")

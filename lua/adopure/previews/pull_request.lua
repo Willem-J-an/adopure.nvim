@@ -1,6 +1,6 @@
 local M = {}
 
-local namespace = vim.api.nvim_create_namespace("ado")
+local namespace = vim.api.nvim_create_namespace("adopure")
 
 function M.readable_timestamp(iso_str)
     local pattern = "(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)"
@@ -28,11 +28,11 @@ local function get_info_table(pull_request)
     }
 end
 
----@param pull_request PullRequest
+---@param pull_request adopure.PullRequest
 ---@return string[] votes
 local function get_votes(pull_request)
     local votes = {}
-    local vote_from_value = require("ado.review").get_vote_from_value
+    local vote_from_value = require("adopure.review").get_vote_from_value
     vim.iter(pull_request.reviewers)
         :filter(function(reviewer)
             return reviewer.vote ~= 0
@@ -44,7 +44,7 @@ local function get_votes(pull_request)
 end
 
 ---@param info_line string
----@param pull_request PullRequest
+---@param pull_request adopure.PullRequest
 ---@param subtitle string
 ---@param votes string[]
 ---@return string[]

@@ -1,9 +1,9 @@
 local M = {}
 
 ---@param bufnr number
----@param thread Thread
+---@param thread adopure.Thread
 function M.thread_preview(bufnr, thread)
-    local pull_request = require("ado.previews.pull_request")
+    local pull_request = require("adopure.previews.pull_request")
     local preview_content = {
         "Comment thread: " .. tostring(thread.id),
         "Created: " .. pull_request.readable_timestamp(thread.publishedDate),

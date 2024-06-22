@@ -1,7 +1,7 @@
 local M = {
-    ---@type table<number, Thread>: <extmark_id, pull_request_thread>
+    ---@type table<number, adopure.Thread>: <extmark_id, pull_request_thread>
     buffer_extmarks = {},
-    ---@type table<number, Thread>: <extmark_id, pull_request_thread>
+    ---@type table<number, adopure.Thread>: <extmark_id, pull_request_thread>
     thread_extmarks = {},
 }
 local Path = require("plenary.path")
@@ -31,14 +31,14 @@ local signs = {
     wontFix = "󰗞 ",
 }
 ---@param bufnr number
----@param pull_request_thread Thread
----@param context ThreadContext
+---@param pull_request_thread adopure.Thread
+---@param context adopure.ThreadContext
 local function create_extmark(bufnr, pull_request_thread, context)
     local end_offset = context.rightFileEnd.offset
     local status = pull_request_thread.status
     local hl_group, sign_hl_group
 
-    local hl_groups = require("ado.config.internal").hl_groups
+    local hl_groups = require("adopure.config.internal").hl_groups
     if status == "active" or status == "pending" then
         hl_group = hl_groups.active
         sign_hl_group = hl_groups.active_sign
@@ -70,7 +70,7 @@ local function create_extmark(bufnr, pull_request_thread, context)
 end
 
 ---Create extmarks for pull request threads
----@param pull_request_threads Thread[]
+---@param pull_request_threads adopure.Thread[]
 function M.create_buffer_extmarks(pull_request_threads)
     for _, extmark in pairs(vim.api.nvim_buf_get_extmarks(0, namespace, 0, -1, {})) do
         local extmark_id = extmark[1]

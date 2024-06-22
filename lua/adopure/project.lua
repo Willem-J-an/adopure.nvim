@@ -10,7 +10,7 @@ local function encode_uri_component(text)
     return text
 end
 
----@param project Project
+---@param project adopure.Project
 ---@return string project_name
 local function format_project_choice(project)
     return project.name
@@ -20,7 +20,7 @@ end
 ---@diagnostic disable-next-line: undefined-doc-name
 ---@return string|nil err
 local function set_project_name_cache(project_cache_path)
-    local projects, err = require("ado.api").get_projects()
+    local projects, err = require("adopure.api").get_projects()
     if err then
         return err
     end
@@ -38,7 +38,7 @@ end
 ---Get project name from cache or select correct one;
 ---@return string|nil project_name, string|nil err
 function M.get_project_name(repository_name)
-    local project_cache_path = require("plenary.path"):new(vim.fn.stdpath("cache"), "ado.nvim", repository_name)
+    local project_cache_path = require("plenary.path"):new(vim.fn.stdpath("cache"), "adopure.nvim", repository_name)
     if project_cache_path:exists() then
         return vim.split(project_cache_path:read(), "project_name=")[2]
     end

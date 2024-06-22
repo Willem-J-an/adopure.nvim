@@ -41,7 +41,7 @@ describe("submit command", function()
     end
 
     before_each(function()
-        local state_manager = require("ado").load_state_manager()
+        local state_manager = require("adopure").load_state_manager()
         state_manager:set_state_by_choice(state_manager.pull_requests[1])
         mock_functions()
     end)
@@ -59,16 +59,16 @@ describe("submit command", function()
             mark_id = 10000,
             thread_context = thread_context,
         }
-        local state = require("ado").get_loaded_state()
+        local state = require("adopure").get_loaded_state()
         table.insert(state.comment_creations, comment_creation)
-        require("ado.thread").submit_comment(state, {})
+        require("adopure.thread").submit_comment(state, {})
     end
 
     it("can submit a comment", function()
         create_comment()
-        local state = require("ado").get_loaded_state()
-        ---@type Thread
-        local thread = vim.iter(state.pull_request_threads):find(function(thread) ---@param thread Thread
+        local state = require("adopure").get_loaded_state()
+        ---@type adopure.Thread
+        local thread = vim.iter(state.pull_request_threads):find(function(thread) ---@param thread adopure.Thread
             return thread.comments[1].commentType == "text"
         end)
         assert.are.same(expect_message, thread.comments[1].content)
@@ -76,32 +76,32 @@ describe("submit command", function()
 
     it("can submit a reply", function()
         create_comment()
-        local state = require("ado").get_loaded_state()
-        require("ado.thread").submit_comment(state, {})
+        local state = require("adopure").get_loaded_state()
+        require("adopure.thread").submit_comment(state, {})
         assert.are.same(2, #state.pull_request_threads[1].comments)
     end)
 
     it("can submit a thread status change", function()
         create_comment()
-        local state = require("ado").get_loaded_state()
-        require("ado.thread").update_thread_status(state, {})
+        local state = require("adopure").get_loaded_state()
+        require("adopure.thread").update_thread_status(state, {})
         assert.are.same("closed", state.pull_request_threads[1].status)
     end)
 
     it("can submit a pull request vote", function()
-        local state = require("ado").get_loaded_state()
+        local state = require("adopure").get_loaded_state()
         ---@diagnostic disable-next-line: unused-local
         vim.ui.select = function(_1, _2, cb) ---@diagnostic disable-line: duplicate-set-field
             local _, _ = _1, _2
             cb("approved")
         end
-        require("ado.review").submit_vote(state, {})
+        require("adopure.review").submit_vote(state, {})
         assert.are.same(10, state.active_pull_request.reviewers[1].vote)
         vim.ui.select = function(_1, _2, cb) ---@diagnostic disable-line: duplicate-set-field
             local _, _ = _1, _2
             cb("no vote")
         end
-        require("ado.review").submit_vote(state, {})
+        require("adopure.review").submit_vote(state, {})
     end)
 
     local function unmock_functions()
@@ -111,11 +111,11 @@ describe("submit command", function()
     end
 
     after_each(function()
-        local state = require("ado").get_loaded_state()
+        local state = require("adopure").get_loaded_state()
         for _, thread in pairs(state.pull_request_threads) do
             for _, comment in pairs(thread.comments) do
                 local _, err =
-                    require("ado.api").delete_pull_request_comment(state.active_pull_request, thread, comment.id)
+                    require("adopure.api").delete_pull_request_comment(state.active_pull_request, thread, comment.id)
                 if err then
                     error(err)
                 end

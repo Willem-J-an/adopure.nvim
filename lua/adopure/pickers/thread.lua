@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-doc-name
 
----@class ThreadEntry
----@field value Thread
+---@class adopure.ThreadEntry
+---@field value adopure.Thread
 ---@field ordinal number
 ---@field display string
 
@@ -9,15 +9,15 @@ local M = {}
 local thread_previewer = require("telescope.previewers").new_buffer_previewer({
     title = "Thread preview",
     ---@param self any
-    ---@param entry ThreadEntry
+    ---@param entry adopure.ThreadEntry
     ---@param _ any
     define_preview = function(self, entry, _)
-        require("ado.previews.thread").thread_preview(self.state.bufnr, entry.value)
+        require("adopure.previews.thread").thread_preview(self.state.bufnr, entry.value)
     end,
 })
 
----@param entry Thread
----@return ThreadEntry
+---@param entry adopure.Thread
+---@return adopure.ThreadEntry
 local function entry_maker(entry)
     return {
         value = entry,
@@ -27,7 +27,7 @@ local function entry_maker(entry)
 end
 
 ---@param file_path string
----@param thread_context ThreadContext
+---@param thread_context adopure.ThreadContext
 local function open_scroll(file_path, thread_context)
     if vim.fn.filereadable(file_path) == 0 then
         vim.notify("No such file: " .. file_path, 3)
@@ -40,10 +40,10 @@ local function open_scroll(file_path, thread_context)
 end
 
 ---@param prompt_bufnr number
----@param state AdoState
+---@param state adopure.AdoState
 local function handle_choice(prompt_bufnr, state)
     require("telescope.actions").close(prompt_bufnr)
-    ---@type ThreadEntry
+    ---@type adopure.ThreadEntry
     local selection = require("telescope.actions.state").get_selected_entry()
     local context = selection.value["threadContext"]
     if context == vim.NIL or not context then
@@ -51,22 +51,22 @@ local function handle_choice(prompt_bufnr, state)
     end
     local file_path = string.sub(context.filePath, 2)
     open_scroll(file_path, context)
-    ---@type OpenThreadWindowOpts
+    ---@type adopure.OpenThreadWindowOpts
     local open_thread_window_opts = { thread_id = selection.value.id }
-    require("ado.thread").open_thread_window(state, open_thread_window_opts)
+    require("adopure.thread").open_thread_window(state, open_thread_window_opts)
 end
 
 local thread_filters = {
-    ---@param thread Thread
+    ---@param thread adopure.Thread
     hide_system = function(thread)
         return thread.comments[1].commentType == "text"
     end,
-    ---@param thread Thread
+    ---@param thread adopure.Thread
     hide_closed = function(thread)
         return thread.status == "active" or thread.status == "pending"
     end,
 }
----@class ChooseThreadOpts
+---@class adopure.ChooseThreadOpts
 ---@field thread_filters string[]
 
 ---@param thread_iter Iter
@@ -79,9 +79,9 @@ local function apply_filter(thread_iter, thread_filter)
     end
     return thread_iter:filter(thread_filters[thread_filter]) ---@diagnostic disable-line: undefined-field
 end
----@param pull_request_threads Thread[]
----@param opts ChooseThreadOpts
----@return Thread[] pull_request_threads
+---@param pull_request_threads adopure.Thread[]
+---@param opts adopure.ChooseThreadOpts
+---@return adopure.Thread[] pull_request_threads
 local function filter_pull_request_threads(pull_request_threads, opts)
     if not opts.thread_filters then
         return pull_request_threads
@@ -94,10 +94,10 @@ local function filter_pull_request_threads(pull_request_threads, opts)
 end
 
 ---Choose thread
----@param state AdoState
----@param opts ChooseThreadOpts
+---@param state adopure.AdoState
+---@param opts adopure.ChooseThreadOpts
 function M.choose_thread(state, opts)
-    local wrap_preview_id = require("ado.pickers.pull_request").create_auto_wrap_preview()
+    local wrap_preview_id = require("adopure.pickers.pull_request").create_auto_wrap_preview()
     require("telescope.pickers")
         .new(require("telescope.themes").get_ivy({}), {
             prompt_title = "Threads",

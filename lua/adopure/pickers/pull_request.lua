@@ -1,5 +1,5 @@
----@class PullRequestEntry
----@field value PullRequest
+---@class adopure.PullRequestEntry
+---@field value adopure.PullRequest
 ---@field ordinal number
 ---@field display string
 
@@ -18,14 +18,14 @@ end
 local pull_request_previewer = require("telescope.previewers").new_buffer_previewer({
     title = "Pull request preview",
     ---@param self any
-    ---@param entry PullRequestEntry
+    ---@param entry adopure.PullRequestEntry
     ---@param _ any
     define_preview = function(self, entry, _)
-        require("ado.previews.pull_request").pull_request_preview(self.state.bufnr, entry.value)
+        require("adopure.previews.pull_request").pull_request_preview(self.state.bufnr, entry.value)
     end,
 })
----@param entry PullRequest
----@return PullRequestEntry
+---@param entry adopure.PullRequest
+---@return adopure.PullRequestEntry
 local function entry_maker(entry)
     ---@type string|nil
     local votes = vim.iter(entry.reviewers)
@@ -33,7 +33,7 @@ local function entry_maker(entry)
             return reviewer.vote ~= 0
         end)
         :map(function(reviewer)
-            local Review = require("ado.review")
+            local Review = require("adopure.review")
             local vote = Review.get_vote_from_value(reviewer.vote)
             return Review.vote_icons[vote]
         end)
@@ -49,17 +49,17 @@ local function entry_maker(entry)
 end
 
 ---@param prompt_bufnr number
----@param state_manager StateManager
+---@param state_manager adopure.StateManager
 local function handle_choice(prompt_bufnr, state_manager)
     require("telescope.actions").close(prompt_bufnr)
-    ---@type PullRequestEntry
+    ---@type adopure.PullRequestEntry
     local selection = require("telescope.actions.state").get_selected_entry()
     state_manager:set_state_by_choice(selection.value)
-    require("ado.activate").activate_pull_request_context(state_manager.state)
+    require("adopure.activate").activate_pull_request_context(state_manager.state)
 end
 
 ---Choose and activate selected pull request
----@param state_manager StateManager
+---@param state_manager adopure.StateManager
 function M.choose_and_activate(state_manager)
     local wrap_preview_id = M.create_auto_wrap_preview()
     require("telescope.pickers")

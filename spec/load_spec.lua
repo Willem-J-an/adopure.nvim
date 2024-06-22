@@ -1,7 +1,7 @@
 local assert = require("luassert.assert")
 
 describe("Load command", function()
-    ---@type StateManager|nil
+    ---@type adopure.StateManager|nil
     local state_manager
     local function get_secret_value()
         local secret = os.getenv("AZURE_DEVOPS_EXT_PAT")
@@ -20,12 +20,12 @@ describe("Load command", function()
 
     it("can retrieve PRs", function()
         require("plenary.path")
-        state_manager = require("ado").load_state_manager()
+        state_manager = require("adopure").load_state_manager()
         assert.are.same(#state_manager.pull_requests, 1)
     end)
 
     it("can activate a PR", function()
-        state_manager = require("ado").load_state_manager()
+        state_manager = require("adopure").load_state_manager()
         state_manager:set_state_by_choice(state_manager.pull_requests[1])
 
         assert.are.same(state_manager.state.active_pull_request.title, "Updated pr-test-file.md PR title")

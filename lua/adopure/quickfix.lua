@@ -1,7 +1,7 @@
 local M = {}
 
 ---Render pull request threads in quickfix panel
----@param pull_request_threads Thread[]
+---@param pull_request_threads adopure.Thread[]
 ---@param _ table
 function M.render_quickfix(pull_request_threads, _)
     local entries = {}

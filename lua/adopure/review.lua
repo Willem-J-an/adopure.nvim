@@ -28,7 +28,7 @@ function M.get_vote_from_value(vote_value)
 end
 
 ---Submit vote of choice on pull request
----@param state AdoState
+---@param state adopure.AdoState
 ---@param _ table
 function M.submit_vote(state, _)
     vim.ui.select(vim.tbl_keys(M.pull_request_vote), { prompt = "Select vote;" }, function(vote)
@@ -36,7 +36,7 @@ function M.submit_vote(state, _)
             vim.notify("No vote chosen;", 2)
             return
         end
-        local new_reviewer, err = require("ado.api").submit_vote(state.active_pull_request, M.pull_request_vote[vote])
+        local new_reviewer, err = require("adopure.api").submit_vote(state.active_pull_request, M.pull_request_vote[vote])
         if err or not new_reviewer then
             error(err or "Expected Reviewer but not nil;")
         end

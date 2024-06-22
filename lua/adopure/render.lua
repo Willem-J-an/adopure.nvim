@@ -96,7 +96,7 @@ local icons = {
 }
 
 ---Render pull request thread
----@param pull_request_thread Thread
+---@param pull_request_thread adopure.Thread
 ---@return number, number: bufnr, mark_id
 function M.render_reply_thread(pull_request_thread)
     local bufnr = new_or_convert_window("[adopure - thread - " .. pull_request_thread.id .. "]")

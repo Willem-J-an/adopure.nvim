@@ -39,11 +39,11 @@ function M.get_remote_config()
     })
     get_remotes:start()
     ---@type string
-    local remote = require("ado.utils").await_result(get_remotes)[1]
+    local remote = require("adopure.utils").await_result(get_remotes)[1]
     return extract_git_details(remote)
 end
 
----@param pull_request PullRequest
+---@param pull_request adopure.PullRequest
 ---@param open_callable function
 function M.confirm_checkout_and_open(pull_request, open_callable)
     local Job = require("plenary.job")
