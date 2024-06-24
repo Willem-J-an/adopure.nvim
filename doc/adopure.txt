@@ -154,7 +154,7 @@ AdoState:new({repository}, {pull_request})
 
 AdoState:load_pull_request_threads({_})     *AdoState:load_pull_request_threads*
     Fetch comment threads from Azure DevOps.
-    Comment threads are added upon initilization and when creating new threads with the plugin.
+    Comment threads are added upon initialization and when creating new threads with the plugin.
     Comment threads created by others, or without the plugin are not automatically loaded.
 
     Parameters: ~

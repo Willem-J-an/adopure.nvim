@@ -18,6 +18,7 @@ jobs:
         run: |
           git fetch --tags
           tag="$(git describe --abbrev=0 --tags)"
+          # shellcheck disable=SC2086
           echo "LUAROCKS_VERSION=$tag" >> $GITHUB_ENV
 
       - name: Luarocks Upload
