@@ -65,3 +65,13 @@ set_keymap("<leader>asc", "AdoPure submit comment")
 set_keymap("<leader>asv", "AdoPure submit vote")
 set_keymap("<leader>ast", "AdoPure submit thread_status")
 ```
+
+## Showcase
+### Load open pull requests
+![image](https://github.com/Willem-J-an/adopure.nvim/assets/51120533/b48ef520-66a3-4c80-b17c-86f79f92348c)
+### Create comments
+![image](https://github.com/Willem-J-an/adopure.nvim/assets/51120533/ee8e4b07-72a6-4e84-b976-30343f0f3d7c)
+### Reply, render, vote on comment threads
+![image](https://github.com/Willem-J-an/adopure.nvim/assets/51120533/af7e636a-99b3-4a64-80cb-5b4d10ce5d10)
+### Load comments into quickfix, render comments in a picker with preview
+![image](https://github.com/Willem-J-an/adopure.nvim/assets/51120533/f75cb401-fbfc-446f-8d24-aa33bf67555a)
