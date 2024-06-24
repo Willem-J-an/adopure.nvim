@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.0.0...v1.1.0) (2024-06-24)
+
+
+### Features
+
+* add description to rockspec ([c6cec9e](https://github.com/Willem-J-an/adopure.nvim/commit/c6cec9e7507050e0f61686fdf6953234a12910b4))
+
 ## 1.0.0 (2024-06-24)
 
 
