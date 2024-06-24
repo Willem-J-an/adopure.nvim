@@ -6,6 +6,7 @@ The plugin provides an opinionated workflow to interact with Azure DevOps Pull R
 
 - Requires Neovim >= 0.10
 - Installation using lazy:
+
 ``` lua
 {
     "Willem-J-an/adopure.nvim",
@@ -18,8 +19,10 @@ The plugin provides an opinionated workflow to interact with Azure DevOps Pull R
     end,
 }
 ```
+
 - Available on luarocks:
-```
+
+```bash
 luarocks install adopure.nvim
 ```
 
@@ -27,7 +30,8 @@ For all available config options see:
 :h adopure.config.meta
 
 ## Usage
-```
+
+```vimL
 :AdoPure    [ load ] [ context | threads ] [ opts ]
             [ open ] [ quickfix | thread_picker | new_thread | existing_thread ] [ opts ]
             [ submit ] [ comment | vote | thread_status ] [ opts ]
@@ -49,6 +53,7 @@ submit  | <i>               | Submits specified argument to Azure DevOps.
 <i>     | thread_status     | Submit a thread_status change; must be in existing_thread window.
 
 ## Suggested keymaps
+
 ``` lua
 local function set_keymap(keymap, command)
     vim.keymap.set({ "n", "v" }, keymap, function()
@@ -67,11 +72,19 @@ set_keymap("<leader>ast", "AdoPure submit thread_status")
 ```
 
 ## Showcase
+
 ### Load open pull requests
+
 ![image](https://github.com/Willem-J-an/adopure.nvim/assets/51120533/b48ef520-66a3-4c80-b17c-86f79f92348c)
+
 ### Create comments
+
 ![image](https://github.com/Willem-J-an/adopure.nvim/assets/51120533/ee8e4b07-72a6-4e84-b976-30343f0f3d7c)
+
 ### Reply, render, vote on comment threads
+
 ![image](https://github.com/Willem-J-an/adopure.nvim/assets/51120533/af7e636a-99b3-4a64-80cb-5b4d10ce5d10)
+
 ### Load comments into quickfix, render comments in a picker with preview
+
 ![image](https://github.com/Willem-J-an/adopure.nvim/assets/51120533/f75cb401-fbfc-446f-8d24-aa33bf67555a)
