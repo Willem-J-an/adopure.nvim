@@ -1,3 +1,4 @@
 /luarocks
 /lua_modules
 /.luarocks
+doc/tags

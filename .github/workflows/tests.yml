@@ -17,7 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Add git remote
-        run: git remote add ado git@ssh.dev.azure.com:v3/adopure/adopure.nvim/adopure.nvim
+        run: |
+          git remote add ado \
+          git@ssh.dev.azure.com:v3/adopure/adopure.nvim/adopure.nvim
 
       - name: Run tests
         uses: nvim-neorocks/nvim-busted-action@v1
