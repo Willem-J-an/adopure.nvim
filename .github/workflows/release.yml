@@ -20,7 +20,6 @@ jobs:
           tag="$(git describe --abbrev=0 --tags)"
           # shellcheck disable=SC2086
           echo "LUAROCKS_VERSION=$tag" >> $GITHUB_ENV
-
       - name: Luarocks Upload
         uses: nvim-neorocks/luarocks-tag-release@v5
         if: env.LUAROCKS_API_KEY != null
