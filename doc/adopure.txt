@@ -1,0 +1,71 @@
+==============================================================================
+Table of Contents                                                      *adopure*
+
+
+The plugin provides an opinionated worfklow to interact with Azure DevOps Pull Requests.
+
+M.ado_pure({opts})                                                  *M.ado_pure*
+    Main nvim command line entry point of the plugin.
+    Intended to be called using the command: AdoPure.
+    The command is autocompleting when used in neovim command line. Valid options include:
+
+    :AdoPure [ load ] [ context | threads ] [ opts ]
+         Loads specified into state.
+
+             *context*: load open pull requests; prompt user to pick one.
+             Note: Subsequent commands will operate on the chosen PR.
+
+             *threads*: Fetch comment threads from Azure DevOps.
+
+
+    :AdoPure [ open ] [ quickfix | thread_picker | new_thread | existing_thread ] [ opts ]
+         Opens specified in the editor.
+
+             *quickfix*: Open comment threads in quickfix window.
+
+             *thread_picker*: Open a picker with all comment threads.
+             Supports filtering like so:
+                 :AdoPure open thread_picker {thread_filters={'hide_system', 'hide_closed'}}
+
+             *new_thread*: Opens a window to write a comment on code selection.
+
+             *existing_thread*: Opens a window with an existing comment thread.
+
+
+    :AdoPure [ submit ] [ comment | vote | thread_status ] [ opts ]
+         Submits specified to Azure DevOps.
+
+             *comment*: Submit new comment or reply; must be in new_thread or existing_thread window.
+
+             *vote*: Submit a new vote on the pull request.
+
+             *thread_status*: Submit a thread_status change; must be in existing_thread window.
+
+    Note: If no arguments args provided, the user will be prompted.
+
+    Parameters: ~
+        {opts}  (table)  provided by neovim user command context.
+
+    Usage: ~
+>lua
+        vim.cmd(':AdoPure load context {}')
+<
+
+
+M.load_state_manager()                                    *M.load_state_manager*
+    Initialize state_manager, contains repository and all open pull requests.
+    If not using the vim command line interface, call this first.
+
+    Returns: ~
+        (adopure.StateManager)
+
+
+M.get_loaded_state()                                        *M.get_loaded_state*
+    Return state of the plugin; raises if no pull request has been loaded into context.
+    If not using the vim command line interface, call this to get state required for the other commands.
+
+    Returns: ~
+        (adopure.AdoState)
+
+
+vim:tw=78:ts=8:noet:ft=help:norl:
