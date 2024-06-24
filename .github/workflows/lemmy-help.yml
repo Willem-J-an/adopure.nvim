@@ -15,7 +15,11 @@ jobs:
 
       - name: Generating help
         run: |
-          curl -Lq https://github.com/numToStr/lemmy-help/releases/latest/download/lemmy-help-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          host="https://github.com/"
+          path="numToStr/lemmy-help/releases/latest/download/"
+          file="lemmy-help-x86_64-unknown-linux-gnu.tar.gz"
+          curl -Lq "$host$path$file" | tar xz
+
           ./lemmy-help \
             lua/adopure.lua \
             lua/adopure/config/meta.lua \
