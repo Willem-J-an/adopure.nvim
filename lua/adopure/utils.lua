@@ -19,6 +19,7 @@ function M.await_result(job)
         vim.wait(200, function()
             ---@diagnostic disable-next-line: missing-return,undefined-field
             stdout = job:result()
+            ---@diagnostic disable-next-line: missing-return,undefined-field
             stderr = job:stderr_result()
         end)
     end

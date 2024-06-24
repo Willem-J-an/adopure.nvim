@@ -1,8 +1,10 @@
----@toc adopure
+---@mod adopure
 
 ---@brief [[
 ---The plugin provides an opinionated worfklow to interact with Azure DevOps Pull Requests.
 ---@brief ]]
+
+---@toc adopure.contents
 
 local M = {}
 
