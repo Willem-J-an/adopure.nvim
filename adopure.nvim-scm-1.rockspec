@@ -1,6 +1,6 @@
 rockspec_format = "3.0"
 package = "adopure.nvim"
-version = "0.0.1-1"
+version = "scm-1"
 source = {
 	url = "git+https://github.com/Willem-J-an/adopure.nvim",
 }
@@ -16,6 +16,7 @@ test_dependencies = {
 build = {
 	type = "builtin",
 	copy_directories = {
+		"doc",
 		"plugin",
 	},
 }
