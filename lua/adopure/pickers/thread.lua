@@ -1,5 +1,7 @@
+---@mod adopure.pickers.thread
 ---@diagnostic disable: undefined-doc-name
 
+---@private
 ---@class adopure.ThreadEntry
 ---@field value adopure.Thread
 ---@field ordinal number
@@ -66,7 +68,12 @@ local thread_filters = {
         return thread.status == "active" or thread.status == "pending"
     end,
 }
+
+---Parameters for the thread picker.
 ---@class adopure.ChooseThreadOpts
+---Supports following filters:
+---*hide_system*: Hides system threads in the picker.
+---*hide_closed*: Hides closed threads in the picker.
 ---@field thread_filters string[]
 
 ---@param thread_iter Iter
@@ -79,6 +86,7 @@ local function apply_filter(thread_iter, thread_filter)
     end
     return thread_iter:filter(thread_filters[thread_filter]) ---@diagnostic disable-line: undefined-field
 end
+
 ---@param pull_request_threads adopure.Thread[]
 ---@param opts adopure.ChooseThreadOpts
 ---@return adopure.Thread[] pull_request_threads
@@ -93,7 +101,7 @@ local function filter_pull_request_threads(pull_request_threads, opts)
     return thread_iter:totable() ---@diagnostic disable-line: undefined-field
 end
 
----Choose thread
+---Choose a comment thread to jump to and open the related comment thread window.
 ---@param state adopure.AdoState
 ---@param opts adopure.ChooseThreadOpts
 function M.choose_thread(state, opts)

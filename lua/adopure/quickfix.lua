@@ -1,6 +1,8 @@
+---@mod adopure.quickfix
 local M = {}
 
----Render pull request threads in quickfix panel
+---Render pull request threads in quickfix panel.
+---This allows for a workflow of quickly jumping to various comment threads in the code.
 ---@param pull_request_threads adopure.Thread[]
 ---@param _ table
 function M.render_quickfix(pull_request_threads, _)

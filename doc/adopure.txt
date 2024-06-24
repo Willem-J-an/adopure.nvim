@@ -1,52 +1,65 @@
 ==============================================================================
-                                                                       *adopure*
-
-The plugin provides an opinionated worfklow to interact with Azure DevOps Pull Requests.
-
-==============================================================================
 Table of Contents                                             *adopure.contents*
 
  ····································································· |adopure|
  ························································· |adopure.config.meta|
+ ······························································· |adopure.state|
+ ······························································ |adopure.thread|
+ ···························································· |adopure.quickfix|
+ ······················································ |adopure.pickers.thread|
+ ······························································ |adopure.review|
 
-M.ado_pure({opts})                                                  *M.ado_pure*
-    Main nvim command line entry point of the plugin.
-    Intended to be called using the command: AdoPure.
-    The command is autocompleting when used in neovim command line. Valid options include:
+==============================================================================
+                                                                       *adopure*
 
-    :AdoPure [ load ] [ context | threads ] [ opts ]
-         Loads specified into state.
+                                                                   *adopure.cli*
+The plugin provides an opinionated workflow to interact with Azure DevOps Pull Requests.
 
-             *context*: load open pull requests; prompt user to pick one.
-             Note: Subsequent commands will operate on the chosen PR.
+adopure.lua contains the main nvim command line entry point of the plugin.
+The entry-point is called using the command: AdoPure.
+The command is auto-completing when used in neovim command line. Valid options include:
 
-             *threads*: Fetch comment threads from Azure DevOps.
+>vim
+ :AdoPure [ load ] [ context | threads ] [ opts ]
+<
+Loads specified argument into state.
 
+     *context*: load open pull requests; prompt user to pick one.
+     Note: Subsequent commands will operate on the chosen PR.
 
-    :AdoPure [ open ] [ quickfix | thread_picker | new_thread | existing_thread ] [ opts ]
-         Opens specified in the editor.
+     *threads*: Fetch comment threads from Azure DevOps.
 
-             *quickfix*: Open comment threads in quickfix window.
+>vim
+ :AdoPure [ open ] [ quickfix | thread_picker | new_thread | existing_thread ] [ opts ]
+<
+Opens specified argument in the editor.
 
-             *thread_picker*: Open a picker with all comment threads.
-             Supports filtering like so:
-                 :AdoPure open thread_picker {thread_filters={'hide_system', 'hide_closed'}}
+     *quickfix*: Open comment threads in quickfix window.
 
-             *new_thread*: Opens a window to write a comment on code selection.
+     *thread_picker*: Open a picker with all comment threads.
+     Supports filtering like so:
+>vim
+     :AdoPure open thread_picker {thread_filters={'hide_system', 'hide_closed'}}
+<
+     *new_thread*: Opens a window to write a comment on code selection.
 
-             *existing_thread*: Opens a window with an existing comment thread.
+     *existing_thread*: Opens a window with an existing comment thread.
 
+>vim
+ :AdoPure [ submit ] [ comment | vote | thread_status ] [ opts ]
+<
+Submits specified argument to Azure DevOps.
 
-    :AdoPure [ submit ] [ comment | vote | thread_status ] [ opts ]
-         Submits specified to Azure DevOps.
+     *comment*: Submit new comment or reply; must be in new_thread or existing_thread window.
 
-             *comment*: Submit new comment or reply; must be in new_thread or existing_thread window.
+     *vote*: Submit a new vote on the pull request.
 
-             *vote*: Submit a new vote on the pull request.
+     *thread_status*: Submit a thread_status change; must be in existing_thread window.
 
-             *thread_status*: Submit a thread_status change; must be in existing_thread window.
+Note: If no arguments args provided, the user will be prompted.
 
-    Note: If no arguments args provided, the user will be prompted.
+adopure.ado_pure({opts})                                      *adopure.ado_pure*
+    Main command line entry point for the module.
 
     Parameters: ~
         {opts}  (table)  provided by neovim user command context.
@@ -57,17 +70,24 @@ M.ado_pure({opts})                                                  *M.ado_pure*
 <
 
 
-M.load_state_manager()                                    *M.load_state_manager*
+adopure.load_state_manager()                        *adopure.load_state_manager*
     Initialize state_manager, contains repository and all open pull requests.
     If not using the vim command line interface, call this first.
+    After getting a state_manager, load a PR into context with the choose_and_activate method.
 
     Returns: ~
         (adopure.StateManager)
 
+    Usage: ~
+>lua
+        M.load_state_manager():choose_and_activate()
+<
 
-M.get_loaded_state()                                        *M.get_loaded_state*
+
+adopure.get_loaded_state()                            *adopure.get_loaded_state*
     Return state of the plugin; raises if no pull request has been loaded into context.
-    If not using the vim command line interface, call this to get state required for the other commands.
+    If not using the vim command line interface, use adopure.load_state_manager.
+    Then call this to get state required for the other commands.
 
     Returns: ~
         (adopure.AdoState)
@@ -76,10 +96,20 @@ M.get_loaded_state()                                        *M.get_loaded_state*
 ==============================================================================
                                                            *adopure.config.meta*
 
-The plugin is configured by assigning an adopure.Config to vim.g.adopure.
+The plugin is configured by assigning an adopure.Config table to vim.g.adopure.
 >lua
  vim.g.adopure = {}
 <
+There is no mechanism built-in to securely load secrets.
+If you have a cli command that will produce the secret, consider doing something like this:
+>lua
+ local nio = require("nio")
+ nio.run(function()
+     local secret_job = nio.process.run({ cmd = "pass", args = { "show", "my_pat_token_secret_name"} })
+     vim.g.adopure = { pat_token = secret_job.stdout.read():sub(1, -2) }
+ end)
+<
+Alternatively, you can set it as environment variable.
 
 adopure.Highlights                                          *adopure.Highlights*
 
@@ -94,27 +124,124 @@ adopure.Highlights                                          *adopure.Highlights*
 adopure.Config                                                  *adopure.Config*
 
     Fields: ~
-        {pat_token?}          (string)              Personal Access Token to acess Azure DevOps.
+        {pat_token?}          (string)              Personal Access Token to access Azure DevOps.
                                                     If not provided, attempt to use AZURE_DEVOPS_EXT_PAT environment variable.
                                                     If no environment variable is set, and no config is provided, the plugin will not work.
-                                                    The plugin offers no mechanism to securely load secrets.
-                                                    If you have a cli command that will produce the secret, consider doing something like this:
-                                                    >lua
-                                                     local nio = require("nio")
-                                                     nio.run(function()
-                                                         local secret_job = nio.process.run({ cmd = "pass", args = { "show", secret_name} })
-                                                         vim.g.adopure = { pat_token = secret_job.stdout.read():sub(1, -2) }
-                                                     end)
-                                                    <
-                                                    Alternatively, you can set it as environment variable.
-
-
         {hl_groups?}          (adopure.Highlights)  Highlight groups to apply.
         {preferred_remotes?}  (string[])            List with preferred remotes to extract Azure DevOps context from.
                                                     Remotes are elected among the following options:
                                                     1. Any remote in this list can be picked, non-deterministically.
                                                     2. Any Azure DevOps remote.
-                                                    3. Any remote. If it's not an Azure DevOps remote, the plugin will not work.
+                                                    3. Any remote. If the remote is not an Azure DevOps remote, the plugin will not work.
+
+
+==============================================================================
+                                                                 *adopure.state*
+
+                                                                  *AdoState:new*
+AdoState:new({repository}, {pull_request})
+
+    Parameters: ~
+        {repository}    (adopure.Repository)
+        {pull_request}  (adopure.PullRequest)
+
+    Returns: ~
+        (adopure.AdoState)
+
+    See: ~
+        |adopure.load_state_manager|
+
+
+AdoState:load_pull_request_threads({_})     *AdoState:load_pull_request_threads*
+    Fetch comment threads from Azure DevOps.
+    Comment threads are added upon initilization and when creating new threads with the plugin.
+    Comment threads created by others, or without the plugin are not automatically loaded.
+
+    Parameters: ~
+        {_}  (table)
+
+
+adopure.StateManager                                      *adopure.StateManager*
+
+    Fields: ~
+        {repository}     (adopure.Repository)
+        {pull_requests}  (adopure.PullRequest[])
+        {state}          (adopure.AdoState|nil)
+
+
+==============================================================================
+                                                                *adopure.thread*
+
+M.new_thread_window({state}, {_})                          *M.new_thread_window*
+    Opens a new comment thread window in the context of the selected text.
+    Make a selection to comment on, then call this to open a window.
+
+    Parameters: ~
+        {state}  (adopure.AdoState)
+        {_}      (table)
+
+
+M.update_thread_status({state}, {_})                    *M.update_thread_status*
+    Update pull request thread status.
+    Will prompt the user to supply the requested new state.
+    Can be called in an existing thread window.
+
+    Parameters: ~
+        {state}  (adopure.AdoState)
+        {_}      (table)
+
+
+M.submit_comment({state}, {_})                                *M.submit_comment*
+    Submit a new comment thread or reply to an existing one.
+    Can be called in a new thread window, or in an existing thread window.
+
+    Parameters: ~
+        {state}  (adopure.AdoState)
+        {_}      (table)
+
+
+==============================================================================
+                                                              *adopure.quickfix*
+
+                                                             *M.render_quickfix*
+M.render_quickfix({pull_request_threads}, {_})
+    Render pull request threads in quickfix panel.
+    This allows for a workflow of quickly jumping to various comment threads in the code.
+
+    Parameters: ~
+        {pull_request_threads}  (adopure.Thread[])
+        {_}                     (table)
+
+
+==============================================================================
+                                                        *adopure.pickers.thread*
+
+adopure.ChooseThreadOpts                              *adopure.ChooseThreadOpts*
+    Parameters for the thread picker.
+
+    Fields: ~
+        {thread_filters}  (string[])  Supports following filters:
+                                      *hide_system*: Hides system threads in the picker.
+                                      *hide_closed*: Hides closed threads in the picker.
+
+
+M.choose_thread({state}, {opts})                               *M.choose_thread*
+    Choose a comment thread to jump to and open the related comment thread window.
+
+    Parameters: ~
+        {state}  (adopure.AdoState)
+        {opts}   (adopure.ChooseThreadOpts)
+
+
+==============================================================================
+                                                                *adopure.review*
+
+M.submit_vote({state}, {_})                                      *M.submit_vote*
+    Submit vote of choice on pull request.
+
+    Parameters: ~
+        {state}  (adopure.AdoState)
+        {_}      (table)
 
 
 vim:tw=78:ts=8:noet:ft=help:norl:

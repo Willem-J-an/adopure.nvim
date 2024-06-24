@@ -1,12 +1,57 @@
----@mod adopure
-
----@brief [[
----The plugin provides an opinionated worfklow to interact with Azure DevOps Pull Requests.
----@brief ]]
 
 ---@toc adopure.contents
 
-local M = {}
+---@mod adopure
+
+---@tag adopure.cli
+---@brief [[
+---The plugin provides an opinionated workflow to interact with Azure DevOps Pull Requests.
+---
+---adopure.lua contains the main nvim command line entry point of the plugin.
+---The entry-point is called using the command: AdoPure.
+---The command is auto-completing when used in neovim command line. Valid options include:
+---
+--->vim
+--- :AdoPure [ load ] [ context | threads ] [ opts ]
+---<
+---Loads specified argument into state.
+---
+---     *context*: load open pull requests; prompt user to pick one.
+---     Note: Subsequent commands will operate on the chosen PR.
+---
+---     *threads*: Fetch comment threads from Azure DevOps.
+---
+--->vim
+--- :AdoPure [ open ] [ quickfix | thread_picker | new_thread | existing_thread ] [ opts ]
+---<
+---Opens specified argument in the editor.
+---
+---     *quickfix*: Open comment threads in quickfix window.
+---
+---     *thread_picker*: Open a picker with all comment threads.
+---     Supports filtering like so:
+--->vim
+---     :AdoPure open thread_picker {thread_filters={'hide_system', 'hide_closed'}}
+---<
+---     *new_thread*: Opens a window to write a comment on code selection.
+---
+---     *existing_thread*: Opens a window with an existing comment thread.
+---
+--->vim
+--- :AdoPure [ submit ] [ comment | vote | thread_status ] [ opts ]
+---<
+---Submits specified argument to Azure DevOps.
+---
+---     *comment*: Submit new comment or reply; must be in new_thread or existing_thread window.
+---
+---     *vote*: Submit a new vote on the pull request.
+---
+---     *thread_status*: Submit a thread_status change; must be in existing_thread window.
+---
+---Note: If no arguments args provided, the user will be prompted.
+---@brief ]]
+
+local adopure = {}
 
 ---@type adopure.StateManager|nil
 local state_manager
@@ -52,11 +97,11 @@ local subcommand_tbl = {
         impl = function(args)
             local sub_impl = {
                 context = function(opts)
-                    local manager = M.load_state_manager()
+                    local manager = adopure.load_state_manager()
                     manager:choose_and_activate(opts)
                 end,
                 threads = function(opts)
-                    M.get_loaded_state():load_pull_request_threads(opts)
+                    adopure.get_loaded_state():load_pull_request_threads(opts)
                 end,
             }
             execute_or_prompt(sub_impl, args, "load")
@@ -67,13 +112,13 @@ local subcommand_tbl = {
         impl = function(args)
             local sub_impl = {
                 comment = function(opts)
-                    require("adopure.thread").submit_comment(M.get_loaded_state(), opts)
+                    require("adopure.thread").submit_comment(adopure.get_loaded_state(), opts)
                 end,
                 vote = function(opts)
-                    require("adopure.review").submit_vote(M.get_loaded_state(), opts)
+                    require("adopure.review").submit_vote(adopure.get_loaded_state(), opts)
                 end,
                 thread_status = function(opts)
-                    require("adopure.thread").update_thread_status(M.get_loaded_state(), opts)
+                    require("adopure.thread").update_thread_status(adopure.get_loaded_state(), opts)
                 end,
             }
             execute_or_prompt(sub_impl, args, "submit")
@@ -84,16 +129,16 @@ local subcommand_tbl = {
         impl = function(args)
             local sub_impl = {
                 quickfix = function(opts)
-                    require("adopure.quickfix").render_quickfix(M.get_loaded_state().pull_request_threads, opts)
+                    require("adopure.quickfix").render_quickfix(adopure.get_loaded_state().pull_request_threads, opts)
                 end,
                 thread_picker = function(opts)
-                    require("adopure.pickers.thread").choose_thread(M.get_loaded_state(), opts)
+                    require("adopure.pickers.thread").choose_thread(adopure.get_loaded_state(), opts)
                 end,
                 new_thread = function(opts)
-                    require("adopure.thread").new_thread_window(M.get_loaded_state(), opts)
+                    require("adopure.thread").new_thread_window(adopure.get_loaded_state(), opts)
                 end,
                 existing_thread = function(opts)
-                    require("adopure.thread").open_thread_window(M.get_loaded_state(), opts)
+                    require("adopure.thread").open_thread_window(adopure.get_loaded_state(), opts)
                 end,
             }
             execute_or_prompt(sub_impl, args, "open")
@@ -101,48 +146,12 @@ local subcommand_tbl = {
     },
 }
 
----Main nvim command line entry point of the plugin.
----Intended to be called using the command: AdoPure.
----The command is autocompleting when used in neovim command line. Valid options include:
----
----:AdoPure [ load ] [ context | threads ] [ opts ]
----     Loads specified into state.
----
----         *context*: load open pull requests; prompt user to pick one.
----         Note: Subsequent commands will operate on the chosen PR.
----
----         *threads*: Fetch comment threads from Azure DevOps.
----
----
----:AdoPure [ open ] [ quickfix | thread_picker | new_thread | existing_thread ] [ opts ]
----     Opens specified in the editor.
----
----         *quickfix*: Open comment threads in quickfix window.
----
----         *thread_picker*: Open a picker with all comment threads.
----         Supports filtering like so:
----             :AdoPure open thread_picker {thread_filters={'hide_system', 'hide_closed'}}
----
----         *new_thread*: Opens a window to write a comment on code selection.
----
----         *existing_thread*: Opens a window with an existing comment thread.
----
----
----:AdoPure [ submit ] [ comment | vote | thread_status ] [ opts ]
----     Submits specified to Azure DevOps.
----
----         *comment*: Submit new comment or reply; must be in new_thread or existing_thread window.
----
----         *vote*: Submit a new vote on the pull request.
----
----         *thread_status*: Submit a thread_status change; must be in existing_thread window.
----
----Note: If no arguments args provided, the user will be prompted.
+---Main command line entry point for the module.
 ---@param opts table provided by neovim user command context.
 ---@usage lua [[
 ---vim.cmd(':AdoPure load context {}')
 ---@usage ]]
-function M.ado_pure(opts)
+function adopure.ado_pure(opts)
     local fargs = opts.fargs
     local subcommand_key = fargs[1]
 
@@ -156,7 +165,7 @@ function M.ado_pure(opts)
                 vim.notify("AdoPure: Unknown command: " .. subcommand_key, vim.log.levels.ERROR)
                 return
             end
-            M.ado_pure({ fargs = { choice } })
+            adopure.ado_pure({ fargs = { choice } })
         end)
         return
     end
@@ -165,8 +174,12 @@ end
 
 ---Initialize state_manager, contains repository and all open pull requests.
 ---If not using the vim command line interface, call this first.
+---After getting a state_manager, load a PR into context with the choose_and_activate method.
 ---@return adopure.StateManager
-function M.load_state_manager()
+---@usage lua [[
+---M.load_state_manager():choose_and_activate()
+---@usage ]]
+function adopure.load_state_manager()
     if not state_manager then
         local context = require("adopure.state").AdoContext:new()
         state_manager = require("adopure.state").StateManager:new(context)
@@ -176,15 +189,16 @@ function M.load_state_manager()
 end
 
 ---Return state of the plugin; raises if no pull request has been loaded into context.
----If not using the vim command line interface, call this to get state required for the other commands.
+---If not using the vim command line interface, use adopure.load_state_manager.
+---Then call this to get state required for the other commands.
 ---@return adopure.AdoState
-function M.get_loaded_state()
+function adopure.get_loaded_state()
     assert(state_manager and state_manager.state, "Choose and activate a pull request first;")
     return state_manager.state
 end
 
 ---@private
-function M.auto_completer(arg_lead, cmdline, _)
+function adopure.auto_completer(arg_lead, cmdline, _)
     local subcmd_key, subcmd_arg_lead = cmdline:match("^'?<?,?'?>?AdoPure*%s(%S+)%s(.*)$")
     if subcmd_key and subcmd_arg_lead and subcommand_tbl[subcmd_key] and subcommand_tbl[subcmd_key].complete_args then
         return completer(subcommand_tbl[subcmd_key].complete_args, subcmd_arg_lead)
@@ -196,4 +210,4 @@ function M.auto_completer(arg_lead, cmdline, _)
     end
 end
 
-return M
+return adopure

@@ -1,8 +1,14 @@
+---@mod adopure.state
+local M = {}
+
+---@private
 ---@class adopure.AdoContext
 ---@field organization_url string
 ---@field project_name string
 ---@field repository_name string
 local AdoContext = {}
+M.AdoContext = AdoContext
+
 ---@return adopure.AdoContext
 function AdoContext:new()
     local organization_url, project_name, repository_name = require("adopure.git").get_remote_config()
@@ -15,6 +21,7 @@ function AdoContext:new()
     return setmetatable(o, self)
 end
 
+---@private
 ---@class adopure.AdoState
 ---@field repository adopure.Repository
 ---@field active_pull_request adopure.PullRequest
@@ -23,10 +30,12 @@ end
 ---@field comment_creations adopure.CommentCreate[]
 ---@field comment_replies adopure.CommentReply[]
 local AdoState = {}
+M.AdoState = AdoState
 
 ---@param repository adopure.Repository
 ---@param pull_request adopure.PullRequest
 ---@return adopure.AdoState
+---@see adopure.load_state_manager
 function AdoState:new(repository, pull_request)
     local o = {
         repository = repository,
@@ -43,6 +52,7 @@ function AdoState:new(repository, pull_request)
     return self
 end
 
+---@private
 function AdoState:load_pull_request_iterations()
     local iterations, err = require("adopure.api").get_pull_request_iterations(self.active_pull_request)
     if err then
@@ -51,6 +61,9 @@ function AdoState:load_pull_request_iterations()
     self.active_pull_request_iteration = iterations[#iterations]
 end
 
+---Fetch comment threads from Azure DevOps.
+---Comment threads are added upon initialization and when creating new threads with the plugin.
+---Comment threads created by others, or without the plugin are not automatically loaded.
 ---@param _ table
 function AdoState:load_pull_request_threads(_)
     local pull_request_threads, err = require("adopure.api").get_pull_request_threads(self)
@@ -65,6 +78,7 @@ end
 ---@field pull_requests adopure.PullRequest[]
 ---@field state adopure.AdoState|nil
 local StateManager = {}
+M.StateManager = StateManager
 
 ---@param context adopure.AdoContext
 function StateManager:new(context)
@@ -83,9 +97,11 @@ function StateManager:new(context)
         state = nil,
     }
     self.__index = self
-    return setmetatable(o, self)
+    self = setmetatable(o, self)
+    return self
 end
 
+---Prompt to choose a PR and activate the context.
 ---@param _ table
 function StateManager:choose_and_activate(_)
     require("adopure.pickers.pull_request").choose_and_activate(self)
@@ -96,8 +112,5 @@ function StateManager:set_state_by_choice(pull_request)
     self.state = require("adopure.state").AdoState:new(self.repository, pull_request)
 end
 
-return {
-    AdoContext = AdoContext,
-    AdoState = AdoState,
-    StateManager = StateManager,
-}
+---@export AdoState, StateManager
+return M

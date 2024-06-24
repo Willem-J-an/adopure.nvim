@@ -1,3 +1,4 @@
+---@mod adopure.review
 local M = {}
 
 ---@enum PullRequestVote
@@ -8,6 +9,7 @@ M.pull_request_vote = {
     ["approved with suggestions"] = 5,
     approved = 10,
 }
+
 M.vote_icons = {
     rejected = " ",
     ["waiting for author"] = "󱫞 ",
@@ -15,6 +17,8 @@ M.vote_icons = {
     ["approved with suggestions"] = "󱤧 ",
     approved = "󰄴 ",
 }
+
+---@private
 ---Return pull request vote from vote value
 ---@param vote_value PullRequestVote
 ---@return string|nil vote, string|nil err
@@ -27,7 +31,7 @@ function M.get_vote_from_value(vote_value)
     return nil, "No vote found for this value;"
 end
 
----Submit vote of choice on pull request
+---Submit vote of choice on pull request.
 ---@param state adopure.AdoState
 ---@param _ table
 function M.submit_vote(state, _)

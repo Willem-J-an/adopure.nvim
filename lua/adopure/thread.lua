@@ -1,4 +1,5 @@
 local M = {}
+---@mod adopure.thread
 
 ---@param state adopure.AdoState
 ---@param bufnr number
@@ -141,6 +142,8 @@ local function get_thread_context(col_end, col_start, line_end, line_start)
     }
 end
 
+---Opens a new comment thread window in the context of the selected text.
+---Make a selection to comment on, then call this to open a window.
 ---@param state adopure.AdoState
 ---@param _ table
 function M.new_thread_window(state, _)
@@ -164,10 +167,12 @@ function M.new_thread_window(state, _)
     table.insert(state.comment_creations, comment_creation)
 end
 
+---@private
 ---@class adopure.OpenThreadWindowOpts
 ---@field thread_id number|nil
 
----Open thread in window
+---Open an existing comment thread in a window.
+---Can be called if there is an extmark indicating an available comment thread.
 ---@param opts adopure.OpenThreadWindowOpts
 function M.open_thread_window(state, opts)
     local extmark_id = opts.thread_id
@@ -223,7 +228,9 @@ local thread_status = {
     "wontFix",
 }
 
----Update pull request thread status
+---Update pull request thread status.
+---Will prompt the user to supply the requested new state.
+---Can be called in an existing thread window.
 ---@param state adopure.AdoState
 ---@param _ table
 function M.update_thread_status(state, _)
@@ -255,6 +262,8 @@ function M.update_thread_status(state, _)
     end)
 end
 
+---Submit a new comment thread or reply to an existing one.
+---Can be called in a new thread window, or in an existing thread window.
 ---@param state adopure.AdoState
 ---@param _ table
 function M.submit_comment(state, _)
