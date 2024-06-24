@@ -1,15 +1,14 @@
 ==============================================================================
                                                                        *adopure*
 
+The plugin provides an opinionated worfklow to interact with Azure DevOps Pull Requests.
+
 ==============================================================================
 Table of Contents                                             *adopure.contents*
 
  ····································································· |adopure|
  ························································· |adopure.config.meta|
 
-The plugin provides an opinionated worfklow to interact with Azure DevOps Pull Requests.
-
-                                                              *adopure.ado_pure*
 M.ado_pure({opts})                                                  *M.ado_pure*
     Main nvim command line entry point of the plugin.
     Intended to be called using the command: AdoPure.
@@ -77,13 +76,12 @@ M.get_loaded_state()                                        *M.get_loaded_state*
 ==============================================================================
                                                            *adopure.config.meta*
 
-The plugin is configured by assigning adopure.Config to vim.g.adopure.
+The plugin is configured by assigning an adopure.Config to vim.g.adopure.
 >lua
-     vim.g.adopure = {}
+ vim.g.adopure = {}
 <
 
 adopure.Highlights                                          *adopure.Highlights*
-
 
 
     Fields: ~
@@ -98,21 +96,25 @@ adopure.Config                                                  *adopure.Config*
     Fields: ~
         {pat_token?}          (string)              Personal Access Token to acess Azure DevOps.
                                                     If not provided, attempt to use AZURE_DEVOPS_EXT_PAT environment variable.
-                                                    If no environment variable, the plugin will not work.
+                                                    If no environment variable is set, and no config is provided, the plugin will not work.
                                                     The plugin offers no mechanism to securely load secrets.
                                                     If you have a cli command that will produce the secret, consider doing something like this:
-                                                    > lua
-                                                         local nio = require("nio")
-                                                         local function get_secret_job()
-                                                             local secret_job = nio.process.run({ cmd = "pass", args = { "show", secret_name} })
-                                                             local secret_value = secret_job.stdout.read():sub(1, -2)
-                                                             use_secret_task(secret_value)
-                                                         end
-                                                         nio.run(get_secret_job)
+                                                    >lua
+                                                     local nio = require("nio")
+                                                     nio.run(function()
+                                                         local secret_job = nio.process.run({ cmd = "pass", args = { "show", secret_name} })
+                                                         vim.g.adopure = { pat_token = secret_job.stdout.read():sub(1, -2) }
+                                                     end)
                                                     <
+                                                    Alternatively, you can set it as environment variable.
+
 
         {hl_groups?}          (adopure.Highlights)  Highlight groups to apply.
         {preferred_remotes?}  (string[])            List with preferred remotes to extract Azure DevOps context from.
+                                                    Remotes are elected among the following options:
+                                                    1. Any remote in this list can be picked, non-deterministically.
+                                                    2. Any Azure DevOps remote.
+                                                    3. Any remote. If it's not an Azure DevOps remote, the plugin will not work.
 
 
 vim:tw=78:ts=8:noet:ft=help:norl:
