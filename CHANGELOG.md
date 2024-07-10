@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/Willem-J-an/adopure.nvim/compare/v1.1.0...v1.1.1) (2024-07-10)
+
+
+### Bug Fixes
+
+* Improved more accurate diffing strategy ([2541c7f](https://github.com/Willem-J-an/adopure.nvim/commit/2541c7fe38c0286c1e3269e139c6d0858fc94815))
+
 ## [1.1.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.0.0...v1.1.0) (2024-06-24)
 
 
