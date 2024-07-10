@@ -79,7 +79,9 @@ end
 ---@param new_bufname string
 ---@return number bufnr
 local function new_or_convert_window(new_bufname)
-    if vim.api.nvim_buf_get_name(0):find("%[adopure %- new %-") then
+    local bufparts = vim.split(vim.api.nvim_buf_get_name(0), "/")
+    local bufname = bufparts[#bufparts]
+    if bufname:find("%[adopure %- new %-") or bufname == new_bufname then
         return convert_ado_window(new_bufname)
     end
     return open_new_split(new_bufname)
