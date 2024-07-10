@@ -67,6 +67,31 @@ function M.get_remote_config()
     return extract_git_details(elected_remote)
 end
 
+---Get merge base commit
+---@param pull_request adopure.PullRequest
+---@return string merge_base
+function M.get_merge_base(pull_request)
+    local get_merge_base = require("plenary.job"):new({
+        command = "git",
+        args = {
+            "merge-base",
+            pull_request.lastMergeSourceCommit.commitId,
+            pull_request.lastMergeTargetCommit.commitId,
+        },
+        cwd = ".",
+    })
+    get_merge_base:start()
+    local result = require("adopure.utils").await_result(get_merge_base)
+    if result.stderr[1] then
+        if not result.stdout[1] then
+            error(result.stderr[1])
+        end
+        vim.notify(result.stderr[1], 3)
+    end
+    assert(result.stdout[1], "No merge base found;")
+    return result.stdout[1]
+end
+
 ---@param pull_request adopure.PullRequest
 ---@param open_callable function
 function M.confirm_checkout_and_open(pull_request, open_callable)
@@ -76,11 +101,10 @@ function M.confirm_checkout_and_open(pull_request, open_callable)
             open_callable()
             return
         end
-        local remote_source_name = "origin/" .. vim.split(pull_request.sourceRefName, "refs/heads/")[2]
 
         local git_checkout_remote_job = Job:new({
             command = "git",
-            args = { "checkout", remote_source_name },
+            args = { "checkout", pull_request.lastMergeSourceCommit.commitId },
             cwd = ".",
             on_exit = function(j, return_val)
                 if return_val ~= 0 then
@@ -89,29 +113,6 @@ function M.confirm_checkout_and_open(pull_request, open_callable)
             end,
         })
 
-        local remote_target_name = "origin/" .. vim.split(pull_request.targetRefName, "refs/heads/")[2]
-        local git_rebase_abort_job = Job:new({
-            command = "git",
-            args = { "rebase", "--abort" },
-            cwd = ".",
-            on_exit = function(j, return_val)
-                if return_val ~= 0 then
-                    error("Rebase abort failed: " .. vim.inspect(j:result()))
-                end
-            end,
-        })
-        local git_rebase_job = Job:new({
-            command = "git",
-            args = { "rebase", remote_target_name },
-            cwd = ".",
-            on_exit = function(j, return_val)
-                if return_val ~= 0 then
-                    git_rebase_abort_job:start()
-                    error("Rebase failed: " .. vim.inspect(j:result()))
-                end
-            end,
-        })
-        git_checkout_remote_job:and_then_on_success(git_rebase_job)
         git_checkout_remote_job:start()
         open_callable()
     end)

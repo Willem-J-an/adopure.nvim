@@ -15,7 +15,13 @@
 ---@field createdBy adopure.User
 ---@field creationDate string
 ---@field mergeStatus string
+---@field lastMergeCommit MergeCommit
+---@field lastMergeSourceCommit MergeCommit
+---@field lastMergeTargetCommit MergeCommit
 ---@field reviewers adopure.Reviewer[]
+
+---@class MergeCommit
+---@field commitId string
 
 ---@class adopure.User
 ---@field displayName string

@@ -6,8 +6,8 @@ local function confirm_open_in_diffview(pull_request)
         if not input then
             return
         end
-        local remote_target_name = "origin/" .. vim.split(pull_request.targetRefName, "refs/heads/")[2]
-        vim.cmd(":DiffviewOpen " .. remote_target_name)
+        local merge_base = require("adopure.git").get_merge_base(pull_request)
+        vim.cmd(":DiffviewOpen " .. merge_base)
     end)
 end
 
