@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/Willem-J-an/adopure.nvim/compare/v1.1.1...v1.1.2) (2024-07-10)
+
+
+### Bug Fixes
+
+* improve detection of open threads ([457c6d7](https://github.com/Willem-J-an/adopure.nvim/commit/457c6d7d278dce82837c47115edb00cccc954e70))
+
 ## [1.1.1](https://github.com/Willem-J-an/adopure.nvim/compare/v1.1.0...v1.1.1) (2024-07-10)
 
 
