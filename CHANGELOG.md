@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.1.2...v1.2.0) (2024-11-14)
+
+
+### Features
+
+* add isDraft to title in PR picker ([a86d7aa](https://github.com/Willem-J-an/adopure.nvim/commit/a86d7aa1f581f12ff2da61ce76463b1ed9d1ac8c))
+
 ## [1.1.2](https://github.com/Willem-J-an/adopure.nvim/compare/v1.1.1...v1.1.2) (2024-07-10)
 
 
