@@ -43,7 +43,7 @@ local function entry_maker(entry)
     end
     return {
         value = entry,
-        display = entry.title .. " - " .. (votes or "󰇘 "),
+        display = entry.title .. " - " .. (votes or "󰇘 ") .. (entry.isDraft and "[isDraft]" or ""),
         ordinal = entry.title,
     }
 end
