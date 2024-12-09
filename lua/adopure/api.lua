@@ -112,7 +112,7 @@ end
 ---@param state adopure.AdoState
 ---@return adopure.Thread[] threads, string|nil err
 function M.get_pull_request_threads(state)
-    local iteration = "$baseIteration=1&iteration=" .. state.active_pull_request_iteration.id
+    local iteration = "$baseIteration=0&iteration=" .. state.active_pull_request_iteration.id
     ---@type adopure.RequestResult
     local result, err = get_azure_devops(
         state.active_pull_request.url .. "/threads?" .. table.concat({ GIT_API_VERSION, iteration }, "&"),
@@ -150,7 +150,7 @@ local function submit_azure_devops(url, http_verb, request_type, body)
         end
         return nil, "Failed to " .. http_verb .. " " .. request_type .. "; " .. details
     end
-    if type(response.body) == "string" and #response.body ~=0 then
+    if type(response.body) == "string" and #response.body ~= 0 then
         ---@type adopure.Thread|adopure.Comment|adopure.Reviewer|nil
         local result = vim.fn.json_decode(response.body)
         return result, nil

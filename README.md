@@ -88,9 +88,3 @@ set_keymap("<leader>ast", "AdoPure submit thread_status")
 ### Load comments into quickfix, render comments in a picker with preview
 
 ![image](https://github.com/Willem-J-an/adopure.nvim/assets/51120533/f75cb401-fbfc-446f-8d24-aa33bf67555a)
-
-## Limitations
-- There is a bug in the Azure DevOps API.
-When retrieving pull request comment threads the position of comment threads is not returned correctly.
-If the incorrect position is out of bounds of the current version of the file, the plugin cannot place extmarks.
-Feel free to [vote to increase priority on the bug report](https://developercommunity.visualstudio.com/t/Pull-Request-Threads---List-API-operatio/10628358).

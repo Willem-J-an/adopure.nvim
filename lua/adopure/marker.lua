@@ -94,8 +94,6 @@ function M.create_buffer_extmarks(pull_request_threads)
             and open_file_paths[file_path:absolute()]
             and pull_request_thread.threadContext.rightFileStart
         then
-            --- Due to a bug in azure devops rest api; creating extmarks may fail for incorrect positions;
-            ---https://developercommunity.visualstudio.com/t/Pull-Request-Threads---List-API-operatio/10628358
             pcall(create_extmark, open_file_paths[file_path:absolute()], pull_request_thread, context)
         end
     end
