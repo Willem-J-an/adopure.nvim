@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/Willem-J-an/adopure.nvim/compare/v1.2.0...v1.2.1) (2024-12-09)
+
+
+### Bug Fixes
+
+* comment positioning ([b562aae](https://github.com/Willem-J-an/adopure.nvim/commit/b562aae2dbffea7fc9eb96932bf2bb64b4e98d81))
+
 ## [1.2.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.1.2...v1.2.0) (2024-11-14)
 
 
