@@ -38,5 +38,15 @@ function InternalConfig:access_token()
     return vim.base64.encode(":" .. self.pat_token)
 end
 
+---@param status string
+---@return string
+---@return string
+function InternalConfig:hl_details(status)
+    if status == "active" or status == "pending" then
+        return self.hl_groups.active, self.hl_groups.active_sign
+    end
+    return self.hl_groups.inactive, self.hl_groups.inactive_sign
+end
+
 local config = InternalConfig:new()
 return config

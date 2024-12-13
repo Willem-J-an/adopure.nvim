@@ -36,16 +36,8 @@ local signs = {
 local function create_extmark(bufnr, pull_request_thread, context)
     local end_offset = context.rightFileEnd.offset
     local status = pull_request_thread.status
-    local hl_group, sign_hl_group
+    local hl_group, sign_hl_group = require("adopure.config.internal"):hl_details(status)
 
-    local hl_groups = require("adopure.config.internal").hl_groups
-    if status == "active" or status == "pending" then
-        hl_group = hl_groups.active
-        sign_hl_group = hl_groups.active_sign
-    else
-        hl_group = hl_groups.inactive
-        sign_hl_group = hl_groups.inactive_sign
-    end
     local opts = {
         id = pull_request_thread.id,
         end_row = context.rightFileEnd.line - 1,
