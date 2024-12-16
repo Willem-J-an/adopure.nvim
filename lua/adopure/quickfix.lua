@@ -24,7 +24,7 @@ function M.render_quickfix(pull_request_threads, _)
                 filename = file_path.filename,
                 lnum = vim.F.if_nil(context.rightFileStart.line, 1),
                 col = vim.F.if_nil(context.rightFileStart.offset, 1),
-                text = "[" .. pull_request_thread.status .. "] - " .. pull_request_thread.comments[1].content,
+                text = require("adopure.utils").pull_request_thread_title(pull_request_thread),
             }
             table.insert(entries, entry)
         end

@@ -171,30 +171,56 @@ end
 ---@class adopure.OpenThreadWindowOpts
 ---@field thread_id number|nil
 
+---@param opts adopure.OpenThreadWindowOpts
+---@return number[]
+local function _get_extmark_ids(opts)
+    if opts.thread_id then
+        return { opts.thread_id }
+    end
+    return vim.iter(require("adopure.marker").get_extmarks_at_position())
+        :map(function(extmark)
+            return extmark[1]
+        end)
+        :totable()
+end
+
 ---Open an existing comment thread in a window.
 ---Can be called if there is an extmark indicating an available comment thread.
 ---@param opts adopure.OpenThreadWindowOpts
 function M.open_thread_window(state, opts)
-    local extmark_id = opts.thread_id
-    if not extmark_id then
-        local extmarks = require("adopure.marker").get_extmarks_at_position()
-        local first_extmark = extmarks[1]
-        extmark_id = first_extmark[1]
+    local extmark_ids = _get_extmark_ids(opts)
+
+    ---@param pull_request_thread adopure.Thread|nil
+    local function _render_thread_window(pull_request_thread)
+        if not pull_request_thread then
+            vim.notify("Did not choose thread to open;", 3)
+            return
+        end
+        local bufnr, mark_id = require("adopure.render").render_reply_thread(pull_request_thread)
+        add_comment_reply(bufnr, mark_id, state, pull_request_thread)
     end
 
-    ---@type adopure.Thread|nil
-    local thread_to_open
-    for _, pull_request_thread in pairs(state.pull_request_threads) do
-        if pull_request_thread.id == extmark_id then
-            thread_to_open = pull_request_thread
-        end
-    end
-    if not thread_to_open then
+    ---@type adopure.Thread[]
+    local threads_to_open = vim.iter(state.pull_request_threads)
+        :filter(function(pull_request_thread)
+            return vim.iter(extmark_ids):any(function(extmark_id)
+                return extmark_id == pull_request_thread.id
+            end)
+        end)
+        :totable()
+    if #threads_to_open == 0 then
         vim.notify("Did not find thread to open;", 3)
         return
     end
-    local bufnr, mark_id = require("adopure.render").render_reply_thread(thread_to_open)
-    add_comment_reply(bufnr, mark_id, state, thread_to_open)
+    if #threads_to_open == 1 then
+        _render_thread_window(threads_to_open[1])
+        return
+    end
+
+    vim.ui.select(threads_to_open, {
+        prompt = "Select pull request thread to open;",
+        format_item = require("adopure.utils").pull_request_thread_title,
+    }, _render_thread_window)
 end
 
 ---@param bufnr number
