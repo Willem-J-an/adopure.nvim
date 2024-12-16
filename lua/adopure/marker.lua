@@ -7,20 +7,6 @@ local M = {
 local Path = require("plenary.path")
 local namespace = vim.api.nvim_create_namespace("adopure-marker")
 
----Get open file paths with bufnrs
----@diagnostic disable-next-line: undefined-doc-name
----@return table<Path, number>
-local function get_open_file_paths()
-    ---@diagnostic disable-next-line: undefined-doc-name
-    ---@type table<Path, number>
-    local open_file_paths = {}
-    local buffers = vim.api.nvim_list_bufs()
-    for _, buf in pairs(buffers) do
-        local buffer_path = vim.api.nvim_buf_get_name(buf)
-        open_file_paths[Path:new(buffer_path):absolute()] = buf
-    end
-    return open_file_paths
-end
 local signs = {
     active = "󰅺 ",
     byDesign = "󱀡 ",
@@ -63,6 +49,7 @@ local function create_extmark(bufnr, pull_request_thread, context)
             end
             if invalid_field == "col" and start_col ~= 0 then
                 start_col = 0
+                local _ = start_col -- fix incorrect unignorable warning
                 break
             end
             break
@@ -76,27 +63,25 @@ end
 
 ---Create extmarks for pull request threads
 ---@param pull_request_threads adopure.Thread[]
-function M.create_buffer_extmarks(pull_request_threads)
-    for _, extmark in pairs(vim.api.nvim_buf_get_extmarks(0, namespace, 0, -1, {})) do
-        local extmark_id = extmark[1]
-        vim.api.nvim_buf_del_extmark(0, namespace, extmark_id)
-    end
+---@param bufnr number
+---@param file_path string
+function M.create_buffer_extmarks(pull_request_threads, bufnr, file_path)
+    vim.api.nvim_buf_clear_namespace(bufnr, namespace, 0, -1)
 
-    local focused_file_path = Path:new(vim.fn.expand("%:."))
+    local focused_file_path = tostring(Path:new(file_path):make_relative())
     for _, pull_request_thread in ipairs(pull_request_threads) do
-        local open_file_paths = get_open_file_paths()
-        local file_path, context
+        local context
         if type(pull_request_thread.threadContext) == "table" then
             local path_reference = pull_request_thread.threadContext.filePath
-            file_path = Path:new(string.sub(path_reference, 2))
+            file_path = tostring(Path:new(string.sub(path_reference, 2)))
             context = pull_request_thread.threadContext
         end
+
         if
             file_path
             and context
-            and tostring(focused_file_path.filePath) == tostring(file_path.filePath)
+            and focused_file_path == file_path
             and not pull_request_thread.isDeleted
-            and open_file_paths[file_path:absolute()]
             and pull_request_thread.threadContext.rightFileStart
         then
             create_extmark(bufnr, pull_request_thread, context)
