@@ -24,7 +24,7 @@ end
 ---@return number bufnr
 local function open_new_split(bufname)
     vim.cmd("below new " .. bufname)
-    vim.api.nvim_buf_set_option(0, 'buftype', 'nofile')
+    vim.api.nvim_buf_set_option(0, "buftype", "nofile")
     buffer_counter = buffer_counter + 1
     vim.cmd(":setlocal wrap")
 
@@ -115,8 +115,11 @@ function M.render_reply_thread(pull_request_thread)
     for _, comment in ipairs(pull_request_thread.comments) do
         if not comment.isDeleted then
             table.insert(lines, { { comment.author.displayName, "@text.reference" } })
-            for _, line_part in pairs(split_long_lines(comment.content)) do
-                table.insert(lines, { { line_part, "@text.literal" } })
+
+            for _, split_code_blocks in pairs(vim.split(comment.content, string.char(10))) do
+                for _, line in pairs(split_long_lines(split_code_blocks)) do
+                    table.insert(lines, { { line, "@text.literal" } })
+                end
             end
         end
     end
