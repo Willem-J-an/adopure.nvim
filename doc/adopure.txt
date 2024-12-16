@@ -56,6 +56,11 @@ Submits specified argument to Azure DevOps.
 
      *thread_status*: Submit a thread_status change; must be in existing_thread window.
 
+>vim
+ :AdoPure [ unload ]
+<
+Unloads plugin state and remove plugin marks.
+
 Note: If no arguments args provided, the user will be prompted.
 
 adopure.ado_pure({opts})                                      *adopure.ado_pure*
@@ -179,6 +184,14 @@ M.new_thread_window({state}, {_})                          *M.new_thread_window*
     Parameters: ~
         {state}  (adopure.AdoState)
         {_}      (table)
+
+
+M.open_thread_window({opts})                              *M.open_thread_window*
+    Open an existing comment thread in a window.
+    Can be called if there is an extmark indicating an available comment thread.
+
+    Parameters: ~
+        {opts}  (adopure.OpenThreadWindowOpts)
 
 
 M.update_thread_status({state}, {_})                    *M.update_thread_status*
