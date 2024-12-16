@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.2.1...v1.3.0) (2024-12-16)
+
+
+### Features
+
+* add AdoPure unload ([70d82cc](https://github.com/Willem-J-an/adopure.nvim/commit/70d82cca29a59fc587a2067c773e5a2ded05ab68))
+* improved render of codeblocks ([471da25](https://github.com/Willem-J-an/adopure.nvim/commit/471da2596ee7a231207b9b0a21403ceadb670f51))
+* limit marking to open files ([9ec8595](https://github.com/Willem-J-an/adopure.nvim/commit/9ec859590e682c4d82eb3210c2e64ecb10cbd423))
+* multi-try mark apply changed files ([1bcac04](https://github.com/Willem-J-an/adopure.nvim/commit/1bcac04d54bbfcbe03769e5f13daf6c0fbedab3b))
+* open multiple comments on 1 line ([daf2f1c](https://github.com/Willem-J-an/adopure.nvim/commit/daf2f1c8b7aa135563f166bdc3f0d8170d7190f7))
+
 ## [1.2.1](https://github.com/Willem-J-an/adopure.nvim/compare/v1.2.0...v1.2.1) (2024-12-09)
 
 
