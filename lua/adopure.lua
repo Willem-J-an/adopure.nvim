@@ -48,6 +48,11 @@
 ---
 ---     *thread_status*: Submit a thread_status change; must be in existing_thread window.
 ---
+--->vim
+--- :AdoPure [ unload ]
+---<
+---Unloads plugin state and remove plugin marks.
+---
 ---Note: If no arguments args provided, the user will be prompted.
 ---@brief ]]
 
@@ -92,6 +97,13 @@ end
 
 ---@type table<string, adopure.SubCommand>
 local subcommand_tbl = {
+    unload = {
+        complete_args = {},
+        impl = function(_)
+            state_manager = nil
+            require("adopure.activate").disabled_buffer_marker_autocmd()
+        end,
+    },
     load = {
         complete_args = { "context", "threads" },
         impl = function(args)

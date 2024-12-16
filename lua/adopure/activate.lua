@@ -23,6 +23,18 @@ local function buffer_marker_autocmd(state)
     })
 end
 
+function M.disabled_buffer_marker_autocmd()
+    local augroup = vim.api.nvim_create_augroup("adopure.nvim", { clear = true })
+    local namespace = vim.api.nvim_create_namespace("adopure-marker")
+    vim.api.nvim_buf_clear_namespace(0, namespace, 0, -1)
+    vim.api.nvim_create_autocmd({ "BufEnter" }, {
+        group = augroup,
+        callback = function(args)
+            vim.api.nvim_buf_clear_namespace(args.buf, namespace, 0, -1)
+        end,
+    })
+end
+
 ---@param state adopure.AdoState
 function M.activate_pull_request_context(state)
     require("adopure.marker").create_buffer_extmarks(state.pull_request_threads)
