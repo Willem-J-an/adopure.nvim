@@ -51,14 +51,27 @@ local function create_extmark(bufnr, pull_request_thread, context)
         opts.end_row = context.rightFileEnd.line
         opts.end_col = 0
     end
-    local extmark = vim.api.nvim_buf_set_extmark(
-        bufnr,
-        namespace,
-        context.rightFileStart.line - 1,
-        context.rightFileStart.offset - 1,
-        opts
-    )
-    M.buffer_extmarks[extmark] = pull_request_thread
+    local start_row = context.rightFileStart.line - 1
+    local start_col = context.rightFileStart.offset - 1
+    while true do
+        local ok, result = pcall(vim.api.nvim_buf_set_extmark, bufnr, namespace, start_row, start_col, opts)
+        if not ok then
+            local invalid_field = vim.split(result, "'")[2]
+            if invalid_field == "end_col" and opts.end_col ~= 0 then
+                opts.end_col = 0
+                break
+            end
+            if invalid_field == "col" and start_col ~= 0 then
+                start_col = 0
+                break
+            end
+            break
+        end
+        if ok then
+            M.buffer_extmarks[result] = pull_request_thread
+            break
+        end
+    end
 end
 
 ---Create extmarks for pull request threads
@@ -86,7 +99,7 @@ function M.create_buffer_extmarks(pull_request_threads)
             and open_file_paths[file_path:absolute()]
             and pull_request_thread.threadContext.rightFileStart
         then
-            pcall(create_extmark, open_file_paths[file_path:absolute()], pull_request_thread, context)
+            create_extmark(bufnr, pull_request_thread, context)
         end
     end
 end
