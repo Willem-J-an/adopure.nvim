@@ -1,4 +1,3 @@
-local Path = require("plenary.path")
 local M = {}
 
 ---@param pull_request adopure.PullRequest
@@ -18,7 +17,8 @@ local function buffer_marker_autocmd(state)
         group = augroup,
         callback = function(args)
             if state.pull_request_threads and args.file ~= "" then
-                require("adopure.marker").create_buffer_extmarks(state.pull_request_threads, args.buf, args.file)
+                require("adopure.marker").clear_removed_comment_marks(args.buf, state.pull_request_threads)
+                require("adopure.marker").create_new_comment_marks(args.buf, state.pull_request_threads, args.file)
             end
         end,
     })
@@ -38,8 +38,7 @@ end
 
 ---@param state adopure.AdoState
 function M.activate_pull_request_context(state)
-    local focused_file_path = Path:new(vim.fn.expand("%:.")).filename
-    require("adopure.marker").create_buffer_extmarks(state.pull_request_threads, 0, focused_file_path)
+    require("adopure.marker").clear_removed_comment_marks(0, state.pull_request_threads)
     require("adopure.git").confirm_checkout_and_open(state.active_pull_request, function()
         confirm_open_in_diffview(state.active_pull_request)
     end)

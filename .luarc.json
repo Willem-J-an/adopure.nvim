@@ -1,13 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "runtime.version": "LuaJIT",
-  "workspace.library": [
-    "./lua",
-    "~/.luarocks/share/lua/5.1/?.lua",
-    "~/.luarocks/share/lua/5.1/?/init.lua",
-    "./lua_modules/share/lua/5.1/?.lua",
-    "./lua_modules/share/lua/5.1/?"
-  ],
   "diagnostics.globals": [
     "vim",
     "describe",

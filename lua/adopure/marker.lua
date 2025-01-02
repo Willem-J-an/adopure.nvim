@@ -42,17 +42,28 @@ local function create_extmark(bufnr, pull_request_thread, context)
     while true do
         local ok, result = pcall(vim.api.nvim_buf_set_extmark, bufnr, namespace, start_row, start_col, opts)
         if not ok then
-            local invalid_field = vim.split(result, "'")[2]
-            if invalid_field == "end_col" and opts.end_col ~= 0 then
+            local previous_result = ""
+            if result == previous_result then
+                vim.notify("Failed to add mark for thread; error:" .. tostring(result), 3)
+            end
+
+            local invalid_field = vim.split(tostring(result), "'")[2]
+            if invalid_field == "end_col" then
                 opts.end_col = 0
-                break
             end
-            if invalid_field == "col" and start_col ~= 0 then
+            if invalid_field == "col" then
                 start_col = 0
-                local _ = start_col -- fix incorrect unignorable warning
-                break
             end
-            break
+            if invalid_field == "end_row" then
+                opts.end_row = nil
+                opts.end_col = nil
+            end
+            if invalid_field == "line" then
+                local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+                start_row = #lines - 1
+            end
+            previous_result = tostring(result)
+            local _ = previous_result
         end
         if ok then
             M.buffer_extmarks[result] = pull_request_thread
@@ -61,32 +72,67 @@ local function create_extmark(bufnr, pull_request_thread, context)
     end
 end
 
----Create extmarks for pull request threads
----@param pull_request_threads adopure.Thread[]
 ---@param bufnr number
----@param file_path string
-function M.create_buffer_extmarks(pull_request_threads, bufnr, file_path)
-    vim.api.nvim_buf_clear_namespace(bufnr, namespace, 0, -1)
-
-    local focused_file_path = tostring(Path:new(file_path):make_relative())
-    for _, pull_request_thread in ipairs(pull_request_threads) do
-        local context
-        if type(pull_request_thread.threadContext) == "table" then
-            local path_reference = pull_request_thread.threadContext.filePath
-            file_path = tostring(Path:new(string.sub(path_reference, 2)))
-            context = pull_request_thread.threadContext
-        end
-
-        if
-            file_path
-            and context
-            and focused_file_path == file_path
-            and not pull_request_thread.isDeleted
-            and pull_request_thread.threadContext.rightFileStart
-        then
-            create_extmark(bufnr, pull_request_thread, context)
-        end
+---@param pull_request_threads adopure.Thread[]
+function M.clear_removed_comment_marks(bufnr, pull_request_threads)
+    ---@param extmark table<number, number, number, table>
+    local function clear_extmark(extmark)
+        vim.api.nvim_buf_del_extmark(bufnr, namespace, extmark[1])
     end
+
+    ---@param extmark table<number, number, number, table>
+    local function mark_not_in_pull_request_threads(extmark)
+        ---@param pull_request_thread adopure.Thread
+        local function mark_match_thread(pull_request_thread)
+            return extmark[1] == pull_request_thread.id
+        end
+
+        return not vim.iter(pull_request_threads):any(mark_match_thread)
+    end
+
+    ---@type table<number, number, number, table>[]
+    local existing_marks = vim.api.nvim_buf_get_extmarks(bufnr, namespace, 0, -1, { details = true })
+
+    vim.iter(existing_marks):filter(mark_not_in_pull_request_threads):each(clear_extmark)
+end
+
+---Create
+---@param bufnr number
+---@param pull_request_threads adopure.Thread[]
+---@param file_path string
+function M.create_new_comment_marks(bufnr, pull_request_threads, file_path)
+    local focused_file_path = tostring(Path:new(file_path):make_relative())
+
+    ---@type table<number, number, number, table>[]
+    local existing_marks = vim.api.nvim_buf_get_extmarks(bufnr, namespace, 0, -1, { details = true })
+    ---@param thread adopure.Thread
+    ---@return boolean
+    local function should_render_thread(thread)
+        ---@param extmark table<number, number, number, table>
+        local function mark_match_thread(extmark)
+            return extmark[1] == thread.id
+        end
+        if thread.threadContext == vim.NIL or vim.iter(existing_marks):any(mark_match_thread) then
+            return false
+        end
+
+        local path_reference = thread.threadContext.filePath
+        if
+            focused_file_path ~= tostring(Path:new(string.sub(path_reference, 2)))
+            or thread.isDeleted
+            or thread.threadContext.rightFileStart == vim.NIL
+        then
+            return false
+        end
+
+        return true
+    end
+    ---@param thread adopure.Thread
+    local function _create_extmark(thread)
+        create_extmark(bufnr, thread, thread.threadContext)
+    end
+
+    vim.iter(pull_request_threads):filter(should_render_thread):each(_create_extmark)
 end
 
 ---Get extmarks at the cursor position
