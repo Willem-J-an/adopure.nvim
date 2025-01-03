@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.3.0...v1.4.0) (2025-01-03)
+
+
+### Features
+
+* refrain from re-creating marks ([a8723bc](https://github.com/Willem-J-an/adopure.nvim/commit/a8723bca97faf7c6da1637931000396d10670eae))
+
 ## [1.3.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.2.1...v1.3.0) (2024-12-16)
 
 
