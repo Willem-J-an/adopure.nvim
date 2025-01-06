@@ -3,7 +3,8 @@ Table of Contents                                             *adopure.contents*
 
  ····································································· |adopure|
  ························································· |adopure.config.meta|
- ······························································· |adopure.state|
+ ························································· |adopure.types.state|
+ ················································· |adopure.types.state_manager|
  ······························································ |adopure.thread|
  ···························································· |adopure.quickfix|
  ······················································ |adopure.pickers.thread|
@@ -46,7 +47,7 @@ Opens specified argument in the editor.
      *existing_thread*: Opens a window with an existing comment thread.
 
 >vim
- :AdoPure [ submit ] [ comment | vote | thread_status ] [ opts ]
+ :AdoPure [ submit ] [ comment | vote | thread_status | delete_comment | edit_comment ] [ opts ]
 <
 Submits specified argument to Azure DevOps.
 
@@ -55,6 +56,10 @@ Submits specified argument to Azure DevOps.
      *vote*: Submit a new vote on the pull request.
 
      *thread_status*: Submit a thread_status change; must be in existing_thread window.
+
+     *delete_comment*: Delete one of your own comments; must be in existing_thread window.
+
+     *edit_comment*: Edit one of your own comments; must be in existing_thread window.
 
 >vim
  :AdoPure [ unload ]
@@ -141,30 +146,10 @@ adopure.Config                                                  *adopure.Config*
 
 
 ==============================================================================
-                                                                 *adopure.state*
+                                                           *adopure.types.state*
 
-                                                                  *AdoState:new*
-AdoState:new({repository}, {pull_request})
-
-    Parameters: ~
-        {repository}    (adopure.Repository)
-        {pull_request}  (adopure.PullRequest)
-
-    Returns: ~
-        (adopure.AdoState)
-
-    See: ~
-        |adopure.load_state_manager|
-
-
-AdoState:load_pull_request_threads({_})     *AdoState:load_pull_request_threads*
-    Fetch comment threads from Azure DevOps.
-    Comment threads are added upon initialization and when creating new threads with the plugin.
-    Comment threads created by others, or without the plugin are not automatically loaded.
-
-    Parameters: ~
-        {_}  (table)
-
+==============================================================================
+                                                   *adopure.types.state_manager*
 
 adopure.StateManager                                      *adopure.StateManager*
 
@@ -172,6 +157,7 @@ adopure.StateManager                                      *adopure.StateManager*
         {repository}     (adopure.Repository)
         {pull_requests}  (adopure.PullRequest[])
         {state}          (adopure.AdoState|nil)
+        {root_path}      (string)
 
 
 ==============================================================================
@@ -186,18 +172,20 @@ M.new_thread_window({state}, {_})                          *M.new_thread_window*
         {_}      (table)
 
 
-M.open_thread_window({opts})                              *M.open_thread_window*
+M.open_thread_window({state}, {opts})                     *M.open_thread_window*
     Open an existing comment thread in a window.
     Can be called if there is an extmark indicating an available comment thread.
 
     Parameters: ~
-        {opts}  (adopure.OpenThreadWindowOpts)
+        {state}  (adopure.AdoState)
+        {opts}   (adopure.OpenThreadWindowOpts)
 
 
 M.update_thread_status({state}, {_})                    *M.update_thread_status*
     Update pull request thread status.
     Will prompt the user to supply the requested new state.
     Can be called in an existing thread window.
+    @deprecated Migrate to: adopure.AdoState:update_thread({target="update_status"})
 
     Parameters: ~
         {state}  (adopure.AdoState)
@@ -205,25 +193,22 @@ M.update_thread_status({state}, {_})                    *M.update_thread_status*
 
 
 M.submit_comment({state}, {_})                                *M.submit_comment*
-    Submit a new comment thread or reply to an existing one.
-    Can be called in a new thread window, or in an existing thread window.
 
     Parameters: ~
         {state}  (adopure.AdoState)
-        {_}      (table)
+        {_}      (table)             @deprecated Migrate to adopure.AdoState:submit_comment(_)
 
 
 ==============================================================================
                                                               *adopure.quickfix*
 
-                                                             *M.render_quickfix*
-M.render_quickfix({pull_request_threads}, {_})
+M.render_quickfix({state}, {_})                              *M.render_quickfix*
     Render pull request threads in quickfix panel.
     This allows for a workflow of quickly jumping to various comment threads in the code.
 
     Parameters: ~
-        {pull_request_threads}  (adopure.Thread[])
-        {_}                     (table)
+        {state}  (adopure.AdoState)
+        {_}      (table)
 
 
 ==============================================================================

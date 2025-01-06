@@ -34,23 +34,25 @@ For all available config options see:
 ```vimL
 :AdoPure    [ load ] [ context | threads ] [ opts ]
             [ open ] [ quickfix | thread_picker | new_thread | existing_thread ] [ opts ]
-            [ submit ] [ comment | vote | thread_status ] [ opts ]
+            [ submit ] [ comment | vote | thread_status | delete_comment | edit_comment ] [ opts ]
 ```
 
-command | subcommand | description
---      | --                | --
-load    | <i>               | Loads specified argument into state.
-<i>     | context           | Load open pull requests; prompt user to pick one.
-<i>     | threads           | Fetch comment threads from Azure DevOps.
-open    | <i>               | Opens specified argument in the editor.
-<i>     | quickfix          | Open comment threads in quickfix window.
-<i>     | thread_picker     | Open a picker with all comment threads.
-<i>     | new_thread        | Opens a window to write a comment on code selection.
-<i>     | existing_thread   | Opens a window with an existing comment thread.
-submit  | <i>               | Submits specified argument to Azure DevOps.
-<i>     | comment           | Submit new comment or reply; must be in new_thread or existing_thread window.
-<i>     | vote              | Submit a new vote on the pull request.
-<i>     | thread_status     | Submit a thread_status change; must be in existing_thread window.
+command | subcommand      | description
+--------|-----------------|------------------------------------------------------------------------------
+load    | <i>             | Loads specified argument into state.
+<i>     | context         | Load open pull requests; prompt user to pick one.
+<i>     | threads         | Fetch comment threads from Azure DevOps.
+open    | <i>             | Opens specified argument in the editor.
+<i>     | quickfix        | Open comment threads in quickfix window.
+<i>     | thread_picker   | Open a picker with all comment threads.
+<i>     | new_thread      | Opens a window to write a comment on code selection.
+<i>     | existing_thread | Opens a window with an existing comment thread.
+submit  | <i>             | Submits specified argument to Azure DevOps.
+<i>     | comment         | Submit new comment or reply; must be in new_thread or existing_thread window.
+<i>     | vote            | Submit a new vote on the pull request.
+<i>     | thread_status   | Submit a thread_status change; must be in existing_thread window.
+<i>     | delete_comment  | Delete one of your own comments; must be in existing_thread window.
+<i>     | edit_comment    | Edit one of your own comments; must be in existing_thread window.
 
 ## Suggested keymaps
 
@@ -69,6 +71,8 @@ set_keymap("<leader>aoe", "AdoPure open existing_thread")
 set_keymap("<leader>asc", "AdoPure submit comment")
 set_keymap("<leader>asv", "AdoPure submit vote")
 set_keymap("<leader>ast", "AdoPure submit thread_status")
+set_keymap("<leader>asd", "AdoPure submit delete_comment")
+set_keymap("<leader>ase", "AdoPure submit edit_comment")
 ```
 
 ## Showcase
