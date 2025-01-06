@@ -3,7 +3,7 @@
 
 ---@private
 ---@class adopure.ThreadEntry
----@field value adopure.Thread
+---@field value adopure.AdoThread
 ---@field ordinal number
 ---@field display string
 
@@ -14,11 +14,14 @@ local thread_previewer = require("telescope.previewers").new_buffer_previewer({
     ---@param entry adopure.ThreadEntry
     ---@param _ any
     define_preview = function(self, entry, _)
-        require("adopure.previews.thread").thread_preview(self.state.bufnr, entry.value)
+        vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, entry.value:preview())
+        vim.cmd(":setlocal wrap")
+        vim.wo.wrap = true
+        vim.treesitter.start(self.state.bufnr, "markdown")
     end,
 })
 
----@param entry adopure.Thread
+---@param entry adopure.AdoThread
 ---@return adopure.ThreadEntry
 local function entry_maker(entry)
     return {
@@ -95,9 +98,9 @@ local function filter_pull_request_threads(pull_request_threads, opts)
         return pull_request_threads
     end
     local thread_iter = vim.iter(pull_request_threads)
-    for _, thread_filter in ipairs(opts.thread_filters) do
+    vim.iter(opts.thread_filters):each(function(thread_filter) ---@param thread_filter string
         thread_iter = apply_filter(thread_iter, thread_filter)
-    end
+    end)
     return thread_iter:totable() ---@diagnostic disable-line: undefined-field
 end
 

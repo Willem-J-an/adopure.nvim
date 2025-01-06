@@ -1,101 +1,6 @@
+local Path = require("plenary.path")
 local M = {}
 ---@mod adopure.thread
-
----@param state adopure.AdoState
----@param bufnr number
----@param comment_reply adopure.CommentReply
----@return string|nil err
-local function submit_thread_reply(state, bufnr, comment_reply)
-    local comments = comment_reply.thread.comments
-
-    ---@type adopure.NewComment
-    local new_reply = {
-        parentCommentId = comments[#comments].id - 1,
-        content = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n"),
-        commentType = 1,
-    }
-    local comment, err = require("adopure.api").create_pull_request_comment_reply(
-        state.active_pull_request,
-        comment_reply.thread,
-        new_reply
-    )
-    if err or not comment then
-        return err or "Expected Comment but not nil;"
-    end
-    table.insert(comments, comment)
-    require("adopure.render").render_reply_thread(comment_reply.thread)
-end
-
----@param state adopure.AdoState
----@param thread_context adopure.ThreadContext
----@return adopure.PullRequestCommentThreadContext|nil pull_request_thread_context, string|nil err
-local function get_pull_request_comment_thread_context(state, thread_context)
-    local iteration_changes, err = require("adopure.api").get_pull_requests_iteration_changes(
-        state.active_pull_request,
-        state.active_pull_request_iteration
-    )
-    if err then
-        return nil, err
-    end
-    for _, change in pairs(iteration_changes) do
-        if change.item.path == thread_context.filePath then
-            ---@type adopure.PullRequestCommentThreadContext
-            local comment_thread_context = {
-                changeTrackingId = change.changeTrackingId,
-                iterationContext = {
-                    firstComparingIteration = state.active_pull_request_iteration.id,
-                    secondComparingIteration = state.active_pull_request_iteration.id,
-                },
-            }
-            return comment_thread_context, nil
-        end
-    end
-    return nil, "File not changed in this Pull Request;"
-end
-
----@param bufnr number
----@param mark_id number
----@param state adopure.AdoState
----@param thread_to_open adopure.Thread
-local function add_comment_reply(bufnr, mark_id, state, thread_to_open)
-    ---@type adopure.CommentReply
-    local comment_reply = { bufnr = bufnr, mark_id = mark_id, thread = thread_to_open }
-    table.insert(state.comment_replies, comment_reply)
-end
-
----@param state adopure.AdoState
----@param bufnr number
----@param comment_creation adopure.CommentCreate
----@return string|nil err
-local function submit_thread(state, bufnr, comment_creation)
-    local pull_request_thread_context, get_err =
-        get_pull_request_comment_thread_context(state, comment_creation.thread_context)
-    if get_err or not pull_request_thread_context then
-        return get_err or "Expected PullRequestCommentThreadContext but got nil;"
-    end
-
-    ---@type adopure.NewThread
-    local new_thread = {
-        threadContext = comment_creation.thread_context,
-        status = 1,
-        pullRequestThreadContext = pull_request_thread_context,
-        comments = {
-            {
-                parentCommentId = 0,
-                content = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n"),
-                commentType = 1,
-            },
-        },
-    }
-    local thread, err = require("adopure.api").create_pull_request_comment_thread(state.active_pull_request, new_thread)
-    if err or not thread then
-        return err or "Expected Thread but got nil;"
-    end
-    table.insert(state.pull_request_threads, thread)
-    local mark_id
-    bufnr, mark_id = require("adopure.render").render_reply_thread(thread)
-    add_comment_reply(bufnr, mark_id, state, thread)
-end
 
 ---@return number line_start, number col_start, number line_end, number col_end
 local function get_selected_position()
@@ -114,15 +19,16 @@ local function get_selected_position()
 end
 
 ---Get thread context for left or right file
+---@param state adopure.AdoState
 ---@param col_end number
 ---@param col_start number
 ---@param line_end number
 ---@param line_start number
 ---@return adopure.ThreadContext
-local function get_thread_context(col_end, col_start, line_end, line_start)
-    local file_path = "/" .. vim.fn.expand("%:.")
-    if file_path:match("^/diffview://") then
-        local left_path = file_path:gsub("^/diffview://.+/.git/[^/]+(.*)$", "%1")
+local function get_thread_context(state, col_end, col_start, line_end, line_start)
+    local file_path = vim.fn.expand("%:p")
+    if file_path:match("^diffview://") then
+        local left_path = file_path:gsub("^diffview://.+/.git/[^/]+(.*)$", "%1")
         ---@type adopure.ThreadContext
         return {
             filePath = left_path,
@@ -134,7 +40,7 @@ local function get_thread_context(col_end, col_start, line_end, line_start)
     end
     ---@type adopure.ThreadContext
     return {
-        filePath = file_path,
+        filePath = "/" .. tostring(Path:new(file_path):make_relative(state.root_path)),
         leftFileStart = nil,
         leftFileEnd = nil,
         rightFileStart = { line = line_start + 1, offset = col_start + 1 },
@@ -154,16 +60,11 @@ function M.new_thread_window(state, _)
     if col_end == 0 then
         col_end = 2147483647
     end
-    local thread_context = get_thread_context(col_end, col_start, line_end, line_start)
+    local thread_context = get_thread_context(state, col_end, col_start, line_end, line_start)
 
     local bufnr, mark_id = require("adopure.render").render_new_thread(selection)
 
-    ---@type adopure.CommentCreate
-    local comment_creation = {
-        bufnr = bufnr,
-        mark_id = mark_id,
-        thread_context = thread_context,
-    }
+    local comment_creation = require("adopure.types.comment_create").CommentCreation:new(bufnr, mark_id, thread_context)
     table.insert(state.comment_creations, comment_creation)
 end
 
@@ -186,23 +87,24 @@ end
 
 ---Open an existing comment thread in a window.
 ---Can be called if there is an extmark indicating an available comment thread.
+---@param state adopure.AdoState
 ---@param opts adopure.OpenThreadWindowOpts
 function M.open_thread_window(state, opts)
     local extmark_ids = _get_extmark_ids(opts)
 
-    ---@param pull_request_thread adopure.Thread|nil
+    ---@param pull_request_thread adopure.AdoThread|nil
     local function _render_thread_window(pull_request_thread)
         if not pull_request_thread then
             vim.notify("Did not choose thread to open;", 3)
             return
         end
-        local bufnr, mark_id = require("adopure.render").render_reply_thread(pull_request_thread)
-        add_comment_reply(bufnr, mark_id, state, pull_request_thread)
+        local bufnr, mark_id = pull_request_thread:render_reply_thread()
+        state:add_comment_reply(bufnr, mark_id, pull_request_thread)
     end
 
-    ---@type adopure.Thread[]
+    ---@type adopure.AdoThread[]
     local threads_to_open = vim.iter(state.pull_request_threads)
-        :filter(function(pull_request_thread)
+        :filter(function(pull_request_thread) ---@param pull_request_thread adopure.AdoThread
             return vim.iter(extmark_ids):any(function(extmark_id)
                 return extmark_id == pull_request_thread.id
             end)
@@ -223,103 +125,28 @@ function M.open_thread_window(state, opts)
     }, _render_thread_window)
 end
 
----@param bufnr number
----@return adopure.CommentCreate|nil
-local function _get_comment_creation(state, bufnr)
-    for _, comment_creation in pairs(state.comment_creations) do
-        if comment_creation.bufnr == bufnr then
-            return comment_creation
-        end
-    end
-end
-
----@param state adopure.AdoState
----@param bufnr number
----@return adopure.CommentReply|nil
-local function _get_comment_reply(state, bufnr)
-    for _, comment_reply in pairs(state.comment_replies) do
-        if comment_reply.bufnr == bufnr then
-            return comment_reply
-        end
-    end
-end
-
-local thread_status = {
-    "active",
-    "byDesign",
-    "closed",
-    "fixed",
-    "pending",
-    "unknown",
-    "wontFix",
-}
-
 ---Update pull request thread status.
 ---Will prompt the user to supply the requested new state.
 ---Can be called in an existing thread window.
+---@deprecated Migrate to: adopure.AdoState:update_thread({target="update_status"})
 ---@param state adopure.AdoState
 ---@param _ table
 function M.update_thread_status(state, _)
     ---@type number
     local bufnr = vim.api.nvim_get_current_buf()
-    local comment_reply = _get_comment_reply(state, bufnr)
-    if not comment_reply then
-        vim.notify("No comment reply found;", 3)
+    local comment_reply = state:get_comment_reply(bufnr)
+    if comment_reply then
+        state:update_thread({ target = "update_status" })
         return
     end
-
-    vim.ui.select(thread_status, { prompt = "Select new status;" }, function(choice)
-        if not choice then
-            vim.notify("No new status chosen;", 3)
-            return
-        end
-
-        ---@type adopure.Thread
-        local thread = { ---@diagnostic disable-line: missing-fields
-            id = comment_reply.thread.id,
-            status = choice,
-        }
-        local updated_thread, err = require("adopure.api").update_pull_request_thread(state.active_pull_request, thread)
-        if err or not updated_thread then
-            error(err or "Expected Thread but not nil;")
-        end
-        comment_reply.thread.status = updated_thread.status
-        require("adopure.render").render_reply_thread(comment_reply.thread)
-    end)
+    vim.notify("No comment found to update;", 3)
 end
 
----Submit a new comment thread or reply to an existing one.
----Can be called in a new thread window, or in an existing thread window.
 ---@param state adopure.AdoState
 ---@param _ table
+---@deprecated Migrate to adopure.AdoState:submit_comment(_)
 function M.submit_comment(state, _)
-    ---@type string|nil
-    local err
-    ---@type number
-    local bufnr = vim.api.nvim_get_current_buf()
-    local comment_creation = _get_comment_creation(state, bufnr)
-    if comment_creation then
-        err = submit_thread(state, bufnr, comment_creation)
-        if err then
-            error(err)
-        end
-        state.comment_creations = vim.iter(state.comment_creations)
-            :filter(function(state_comment_creation) ---@param state_comment_creation adopure.CommentCreate
-                return comment_creation.bufnr ~= state_comment_creation.bufnr
-            end)
-            :totable()
-        return
-    end
-
-    local comment_reply = _get_comment_reply(state, bufnr)
-    if comment_reply then
-        err = submit_thread_reply(state, bufnr, comment_reply)
-        if err then
-            error(err)
-        end
-        return
-    end
-    vim.notify("No comment found to create or reply to;", 3)
+    state:submit_comment(_)
 end
 
 return M

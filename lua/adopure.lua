@@ -1,4 +1,3 @@
-
 ---@toc adopure.contents
 
 ---@mod adopure
@@ -38,7 +37,7 @@
 ---     *existing_thread*: Opens a window with an existing comment thread.
 ---
 --->vim
---- :AdoPure [ submit ] [ comment | vote | thread_status ] [ opts ]
+--- :AdoPure [ submit ] [ comment | vote | thread_status | delete_comment | edit_comment ] [ opts ]
 ---<
 ---Submits specified argument to Azure DevOps.
 ---
@@ -47,6 +46,10 @@
 ---     *vote*: Submit a new vote on the pull request.
 ---
 ---     *thread_status*: Submit a thread_status change; must be in existing_thread window.
+---
+---     *delete_comment*: Delete one of your own comments; must be in existing_thread window.
+---
+---     *edit_comment*: Edit one of your own comments; must be in existing_thread window.
 ---
 --->vim
 --- :AdoPure [ unload ]
@@ -120,17 +123,27 @@ local subcommand_tbl = {
         end,
     },
     submit = {
-        complete_args = { "comment", "vote", "thread_status" },
+        complete_args = { "comment", "vote", "thread_status", "delete_comment", "edit_comment" },
         impl = function(args)
+            ---@param target adopure.UpdateThreadTarget
+            local function update_thread(target)
+                adopure.get_loaded_state():update_thread({ target = target })
+            end
             local sub_impl = {
                 comment = function(opts)
-                    require("adopure.thread").submit_comment(adopure.get_loaded_state(), opts)
+                    adopure.get_loaded_state():submit_comment(opts)
                 end,
                 vote = function(opts)
                     require("adopure.review").submit_vote(adopure.get_loaded_state(), opts)
                 end,
-                thread_status = function(opts)
-                    require("adopure.thread").update_thread_status(adopure.get_loaded_state(), opts)
+                thread_status = function(_)
+                    update_thread("update_status")
+                end,
+                delete_comment = function(_)
+                    update_thread("delete_comment")
+                end,
+                edit_comment = function(_)
+                    update_thread("edit_comment")
                 end,
             }
             execute_or_prompt(sub_impl, args, "submit")
@@ -141,7 +154,7 @@ local subcommand_tbl = {
         impl = function(args)
             local sub_impl = {
                 quickfix = function(opts)
-                    require("adopure.quickfix").render_quickfix(adopure.get_loaded_state().pull_request_threads, opts)
+                    require("adopure.quickfix").render_quickfix(adopure.get_loaded_state(), opts)
                 end,
                 thread_picker = function(opts)
                     require("adopure.pickers.thread").choose_thread(adopure.get_loaded_state(), opts)
@@ -193,8 +206,8 @@ end
 ---@usage ]]
 function adopure.load_state_manager()
     if not state_manager then
-        local context = require("adopure.state").AdoContext:new()
-        state_manager = require("adopure.state").StateManager:new(context)
+        local context = require("adopure.types.state_manager").AdoContext:new()
+        state_manager = require("adopure.types.state_manager").StateManager:new(context)
     end
     assert(state_manager, "StateManager should not be nil after loading;")
     return state_manager

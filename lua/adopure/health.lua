@@ -12,7 +12,7 @@ local function check_pat_token()
 end
 local function check_context()
     local context_ok, context = pcall(function()
-        return require("adopure.state").AdoContext:new()
+        return require("adopure.types.state_manager").AdoContext:new()
     end)
     if not context_ok then
         vim.health.error(tostring(context))
@@ -31,7 +31,7 @@ local function check_context()
     return true
 end
 local function check_token_in_context()
-    local context = require("adopure.state").AdoContext:new()
+    local context = require("adopure.types.state_manager").AdoContext:new()
     local ok, repository = pcall(require("adopure.api").get_repository, context)
     if not ok or not repository then
         vim.health.error(tostring(repository or "No repository found with pat_token in this context;"))

@@ -11,6 +11,7 @@ local function confirm_open_in_diffview(pull_request)
     end)
 end
 
+---@param state adopure.AdoState
 local function buffer_marker_autocmd(state)
     local augroup = vim.api.nvim_create_augroup("adopure.nvim", { clear = true })
     vim.api.nvim_create_autocmd({ "BufEnter" }, {
@@ -18,7 +19,7 @@ local function buffer_marker_autocmd(state)
         callback = function(args)
             if state.pull_request_threads and args.file ~= "" then
                 require("adopure.marker").clear_removed_comment_marks(args.buf, state.pull_request_threads)
-                require("adopure.marker").create_new_comment_marks(args.buf, state.pull_request_threads, args.file)
+                require("adopure.marker").create_new_comment_marks(args.buf, state, args.file)
             end
         end,
     })

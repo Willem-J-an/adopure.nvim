@@ -23,7 +23,8 @@ jobs:
           ./lemmy-help \
             lua/adopure.lua \
             lua/adopure/config/meta.lua \
-            lua/adopure/state.lua \
+            lua/adopure/types/ado_state.lua \
+            lua/adopure/types/state_manager.lua \
             lua/adopure/thread.lua \
             lua/adopure/quickfix.lua \
             lua/adopure/pickers/thread.lua \

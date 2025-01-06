@@ -1,34 +1,27 @@
+local Path = require("plenary.path")
 ---@mod adopure.quickfix
 local M = {}
 
 ---Render pull request threads in quickfix panel.
 ---This allows for a workflow of quickly jumping to various comment threads in the code.
----@param pull_request_threads adopure.Thread[]
+---@param state adopure.AdoState
 ---@param _ table
-function M.render_quickfix(pull_request_threads, _)
-    local entries = {}
-    for _, pull_request_thread in pairs(pull_request_threads) do
-        local file_path, context
-        if type(pull_request_thread.threadContext) == "table" then
-            local path_reference = pull_request_thread.threadContext.filePath
-            file_path = require("plenary.path"):new(string.sub(path_reference, 2))
-            context = pull_request_thread.threadContext
-        end
-        if
-            file_path
-            and context
-            and not pull_request_thread.isDeleted
-            and pull_request_thread.threadContext.rightFileStart
-        then
-            local entry = {
-                filename = file_path.filename,
+function M.render_quickfix(state, _)
+    local entries = vim.iter(state.pull_request_threads)
+        :filter(function(thread) ---@param thread adopure.AdoThread
+            return thread:is_active_thread()
+        end)
+        :map(function(thread) ---@param thread adopure.AdoThread
+            local context = thread:thread_context()
+            assert(context, "Context not nil for active thread;")
+            return {
+                filename = Path:new(state.root_path, thread:targeted_file_path().filename):make_relative(),
                 lnum = vim.F.if_nil(context.rightFileStart.line, 1),
                 col = vim.F.if_nil(context.rightFileStart.offset, 1),
-                text = require("adopure.utils").pull_request_thread_title(pull_request_thread),
+                text = thread:format_item(),
             }
-            table.insert(entries, entry)
-        end
-    end
+        end)
+        :totable()
     vim.cmd("copen")
     vim.fn.setqflist({}, " ", { nr = "$", items = entries })
 end

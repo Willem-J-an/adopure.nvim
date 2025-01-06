@@ -24,7 +24,7 @@ end
 ---@return number bufnr
 local function open_new_split(bufname)
     vim.cmd("below new " .. bufname)
-    vim.api.nvim_buf_set_option(0, "buftype", "nofile")
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = 0 })
     buffer_counter = buffer_counter + 1
     vim.cmd(":setlocal wrap")
 

@@ -54,21 +54,17 @@ describe("submit command", function()
             rightFileStart = { line = 3, offset = 2 },
             rightFileEnd = { line = 3, offset = 9 },
         }
-        local comment_creation = {
-            bufnr = 1,
-            mark_id = 10000,
-            thread_context = thread_context,
-        }
+        local comment_creation = require("adopure.types.comment_create").CommentCreation:new(1, 10000, thread_context)
         local state = require("adopure").get_loaded_state()
         table.insert(state.comment_creations, comment_creation)
-        require("adopure.thread").submit_comment(state, {})
+        state:submit_comment({})
     end
 
     it("can submit a comment", function()
         create_comment()
         local state = require("adopure").get_loaded_state()
         ---@type adopure.Thread
-        local thread = vim.iter(state.pull_request_threads):find(function(thread) ---@param thread adopure.Thread
+        local thread = vim.iter(state.pull_request_threads):find(function(thread) ---@param thread adopure.AdoThread
             return thread.comments[1].commentType == "text"
         end)
         assert.are.same(expect_message, thread.comments[1].content)
@@ -77,14 +73,14 @@ describe("submit command", function()
     it("can submit a reply", function()
         create_comment()
         local state = require("adopure").get_loaded_state()
-        require("adopure.thread").submit_comment(state, {})
+        state:submit_comment({})
         assert.are.same(2, #state.pull_request_threads[1].comments)
     end)
 
     it("can submit a thread status change", function()
         create_comment()
         local state = require("adopure").get_loaded_state()
-        require("adopure.thread").update_thread_status(state, {})
+        state:update_thread({ target = "update_status" })
         assert.are.same("closed", state.pull_request_threads[1].status)
     end)
 

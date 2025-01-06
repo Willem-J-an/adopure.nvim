@@ -73,74 +73,44 @@ local function create_extmark(bufnr, pull_request_thread, context)
 end
 
 ---@param bufnr number
----@param pull_request_threads adopure.Thread[]
+---@param pull_request_threads adopure.AdoThread[]
 function M.clear_removed_comment_marks(bufnr, pull_request_threads)
-    ---@param extmark table<number, number, number, table>
-    local function clear_extmark(extmark)
-        vim.api.nvim_buf_del_extmark(bufnr, namespace, extmark[1])
-    end
-
-    ---@param extmark table<number, number, number, table>
-    local function mark_not_in_pull_request_threads(extmark)
-        ---@param pull_request_thread adopure.Thread
-        local function mark_match_thread(pull_request_thread)
-            return extmark[1] == pull_request_thread.id
-        end
-
-        return not vim.iter(pull_request_threads):any(mark_match_thread)
-    end
-
-    ---@type table<number, number, number, table>[]
     local existing_marks = vim.api.nvim_buf_get_extmarks(bufnr, namespace, 0, -1, { details = true })
-
-    vim.iter(existing_marks):filter(mark_not_in_pull_request_threads):each(clear_extmark)
+    vim.iter(existing_marks)
+        :filter(function(extmark) ---@param extmark vim.api.keyset.get_extmark_item
+            ---@type adopure.AdoThread|nil
+            local thread = vim.iter(pull_request_threads)
+                :find(function(pull_request_thread) ---@param pull_request_thread adopure.AdoThread
+                    return pull_request_thread:match_mark(extmark)
+                end)
+            return not (thread and thread:is_active_thread())
+        end)
+        :each(function(extmark) ---@param extmark vim.api.keyset.get_extmark_item
+            vim.api.nvim_buf_del_extmark(bufnr, namespace, extmark[1])
+        end)
 end
 
----Create
 ---@param bufnr number
----@param pull_request_threads adopure.Thread[]
+---@param state adopure.AdoState
 ---@param file_path string
-function M.create_new_comment_marks(bufnr, pull_request_threads, file_path)
-    local focused_file_path = tostring(Path:new(file_path):make_relative())
-
-    ---@type table<number, number, number, table>[]
+function M.create_new_comment_marks(bufnr, state, file_path)
+    local focused_file_path = tostring(Path:new(file_path):make_relative(state.root_path))
     local existing_marks = vim.api.nvim_buf_get_extmarks(bufnr, namespace, 0, -1, { details = true })
-    ---@param thread adopure.Thread
-    ---@return boolean
-    local function should_render_thread(thread)
-        ---@param extmark table<number, number, number, table>
-        local function mark_match_thread(extmark)
-            return extmark[1] == thread.id
-        end
-        if thread.threadContext == vim.NIL or vim.iter(existing_marks):any(mark_match_thread) then
-            return false
-        end
 
-        local path_reference = thread.threadContext.filePath
-        if
-            focused_file_path ~= tostring(Path:new(string.sub(path_reference, 2)))
-            or thread.isDeleted
-            or thread.threadContext.rightFileStart == vim.NIL
-        then
-            return false
-        end
-
-        return true
-    end
-    ---@param thread adopure.Thread
-    local function _create_extmark(thread)
-        create_extmark(bufnr, thread, thread.threadContext)
-    end
-
-    vim.iter(pull_request_threads):filter(should_render_thread):each(_create_extmark)
+    vim.iter(state.pull_request_threads)
+        :filter(function(thread) ---@param thread adopure.AdoThread
+            return thread:should_render_extmark(existing_marks, focused_file_path)
+        end)
+        :each(function(thread) ---@param thread adopure.AdoThread
+            create_extmark(bufnr, thread, thread.threadContext)
+        end)
 end
 
 ---Get extmarks at the cursor position
 ---@return table<number, number, number>[]: extmark_id, row, col
 function M.get_extmarks_at_position()
     local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-    local buffer_marks = vim.api.nvim_buf_get_extmarks(0, namespace, { line, 0 }, { line + 1, 0 }, {})
-    return buffer_marks
+    return vim.api.nvim_buf_get_extmarks(0, namespace, { line, 0 }, { line + 1, 0 }, {})
 end
 
 return M

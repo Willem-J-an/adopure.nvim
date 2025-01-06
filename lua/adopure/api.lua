@@ -2,7 +2,7 @@ local M = {}
 local curl = require("plenary.curl")
 local config = require("adopure.config.internal")
 
-local GIT_API_VERSION = "api-version=7.1-preview.1"
+local GIT_API_VERSION = "api-version=7.1"
 
 local access_token = config:access_token()
 local organization_url = ""
@@ -26,7 +26,7 @@ local function get_azure_devops(url, request_type)
     if not ok or not response or response.status ~= 200 then
         local details = ""
         if response then
-            details = response.body or tostring(response)
+            details = (response.body ~= "" and response.body) or vim.inspect(response)
         end
         return nil, "Failed to retrieve " .. request_type .. "; " .. details
     end
@@ -58,6 +58,17 @@ function M.get_repository(context)
             return _repository, err
         end
     end
+end
+
+---Get connection data from Azure DevOps
+---@return adopure.ConnectionData|nil connection_data, string|nil err
+function M.get_connection_data()
+    ---@type adopure.ConnectionData
+    local result, err = get_azure_devops(organization_url .. "/_apis/connectionData", "connectionData")
+    if err then
+        return nil, err
+    end
+    return result, err
 end
 
 ---Get pull requests from Azure DevOps
@@ -216,8 +227,24 @@ function M.delete_pull_request_comment(pull_request, thread, comment_id)
     local result, err = submit_azure_devops(
         table.concat({ pull_request.url, "/threads/", thread.id, "/comments/", comment_id, "?", GIT_API_VERSION }),
         "DELETE",
-        "pull request thread update",
+        "pull request thread comment delete",
         nil
+    )
+    return result, err
+end
+
+---Update pull request comment
+---@param pull_request adopure.PullRequest
+---@param thread adopure.Thread
+---@param comment adopure.Comment
+---@return adopure.Thread|nil thread, string|nil err
+function M.update_pull_request_comment(pull_request, thread, comment)
+    ---@type adopure.Thread|nil
+    local result, err = submit_azure_devops(
+        table.concat({ pull_request.url, "/threads/", thread.id, "/comments/", comment.id, "?", GIT_API_VERSION }),
+        "PATCH",
+        "pull request thread comment update",
+        comment
     )
     return result, err
 end
@@ -227,10 +254,8 @@ end
 ---@param vote PullRequestVote
 ---@return adopure.Reviewer|nil reviewer, string|nil err
 function M.submit_vote(pull_request, vote)
-    ---@type adopure.ConnectionData
-    local connection_result, connection_err =
-        get_azure_devops(organization_url .. "/_apis/connectionData", "connectionData")
-    if connection_err then
+    local connection_result, connection_err = M.get_connection_data()
+    if connection_err or not connection_result then
         return nil, connection_err
     end
 

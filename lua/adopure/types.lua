@@ -1,7 +1,6 @@
 ---@class adopure.RequestResult
 ---@field value any
 
-
 ---@class adopure.PullRequest
 ---@field codeReviewid integer
 ---@field description string
@@ -85,18 +84,6 @@
 ---@field id string
 ---@field displayName string
 
----@class adopure.CommentReply
----@field bufnr number
----@field mark_id number
----@field content string|nil
----@field thread adopure.Thread
-
----@class adopure.CommentCreate
----@field bufnr number
----@field mark_id number
----@field thread_context adopure.ThreadContext
----@field content string|nil
-
 ---@class adopure.NewThread
 ---@field comments adopure.NewComment[]
 ---@field threadContext adopure.ThreadContext
@@ -111,7 +98,6 @@
 ---@class adopure.PullRequestCommentThreadContext
 ---@field changeTrackingId number
 ---@field iterationContext adopure.IterationContext
----@field trackingCriteria adopure.TrackingCriteria
 
 ---@class adopure.IterationContext
 ---@field firstComparingIteration number
@@ -139,3 +125,13 @@
 
 ---@class adopure.ChangeEntryItem
 ---@field path string
+
+---@enum adopure.UpdateThreadTarget
+local _ = {
+    delete_comment = "delete_comment",
+    edit_comment = "edit_comment",
+    update_status = "update_status",
+}
+
+---@class adopure.UpdateThreadOpts
+---@field target adopure.UpdateThreadTarget
