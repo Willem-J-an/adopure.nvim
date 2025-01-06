@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.4.0...v2.0.0) (2025-01-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* big project refactor
+
+### Features
+
+* big project refactor ([de0d03d](https://github.com/Willem-J-an/adopure.nvim/commit/de0d03d49887579d6a31cfb0ce7ef15fa21586ef))
+
 ## [1.4.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.3.0...v1.4.0) (2025-01-03)
 
 
