@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/Willem-J-an/adopure.nvim/compare/v2.0.0...v2.1.0) (2025-01-27)
+
+
+### Features
+
+* retrieve only my pull requests ([cab668e](https://github.com/Willem-J-an/adopure.nvim/commit/cab668e61ec35b7763be9f168480b0440c43e58e))
+
+
+### Bug Fixes
+
+* support space in repo name ([5e3cdd2](https://github.com/Willem-J-an/adopure.nvim/commit/5e3cdd2965c2db846285b34321dd748d9b8c6e0b))
+
 ## [2.0.0](https://github.com/Willem-J-an/adopure.nvim/compare/v1.4.0...v2.0.0) (2025-01-06)
 
 
