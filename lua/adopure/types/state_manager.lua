@@ -38,7 +38,10 @@ function StateManager:new(context)
         error(repository_err)
     end
     assert(repository, "No repository with correct name found in project;")
-    local pull_requests, pull_request_err = require("adopure.api").get_pull_requests(repository)
+    local pull_requests, pull_request_err = require("adopure.api").get_pull_requests(
+        repository,
+        require("adopure.config.internal").filter_my_pull_requests
+    )
     if pull_request_err then
         error(pull_request_err)
     end

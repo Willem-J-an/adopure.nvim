@@ -8,6 +8,7 @@
 ---@field pat_token string|nil
 ---@field hl_groups adopure.InternalHighlights
 ---@field preferred_remotes string[]
+---@field filter_my_pull_requests boolean
 
 local InternalConfig = {}
 function InternalConfig:new()
@@ -20,6 +21,7 @@ function InternalConfig:new()
             inactive_sign = "@comment.note",
         },
         preferred_remotes = {},
+        filter_my_pull_requests = false,
     }
     local user_config = type(vim.g.adopure) == "function" and vim.g.adopure() or vim.g.adopure or {}
     local config = vim.tbl_deep_extend("force", default_config, user_config or {})

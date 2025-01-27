@@ -73,10 +73,16 @@ end
 
 ---Get pull requests from Azure DevOps
 ---@param repository adopure.Repository
+---@param filter_my_pull_requests boolean
 ---@return adopure.PullRequest[] pull_requests, string|nil err
-function M.get_pull_requests(repository)
+function M.get_pull_requests(repository, filter_my_pull_requests)
+    local filter_mine = ""
+    if filter_my_pull_requests then
+        filter_mine = "&_a=mine"
+    end
     ---@type adopure.RequestResult
-    local result, err = get_azure_devops(repository.url .. "/pullrequests?" .. GIT_API_VERSION, "pull requests")
+    local result, err = get_azure_devops(repository.url .. "/pullrequests?" .. GIT_API_VERSION .. filter_mine,
+        "pull requests")
     if not result then
         return {}, err
     end

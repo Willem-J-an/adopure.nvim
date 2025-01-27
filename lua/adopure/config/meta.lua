@@ -33,6 +33,7 @@
 ---2. Any Azure DevOps remote.
 ---3. Any remote. If the remote is not an Azure DevOps remote, the plugin will not work.
 ---@field preferred_remotes? string[]
+---@field filter_my_pull_requests? boolean Fetches only pull requests assigned to me, my team or created by me.
 
 local config = {}
 
