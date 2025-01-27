@@ -134,15 +134,16 @@ adopure.Highlights                                          *adopure.Highlights*
 adopure.Config                                                  *adopure.Config*
 
     Fields: ~
-        {pat_token?}          (string)              Personal Access Token to access Azure DevOps.
-                                                    If not provided, attempt to use AZURE_DEVOPS_EXT_PAT environment variable.
-                                                    If no environment variable is set, and no config is provided, the plugin will not work.
-        {hl_groups?}          (adopure.Highlights)  Highlight groups to apply.
-        {preferred_remotes?}  (string[])            List with preferred remotes to extract Azure DevOps context from.
-                                                    Remotes are elected among the following options:
-                                                    1. Any remote in this list can be picked, non-deterministically.
-                                                    2. Any Azure DevOps remote.
-                                                    3. Any remote. If the remote is not an Azure DevOps remote, the plugin will not work.
+        {pat_token?}                (string)              Personal Access Token to access Azure DevOps.
+                                                          If not provided, attempt to use AZURE_DEVOPS_EXT_PAT environment variable.
+                                                          If no environment variable is set, and no config is provided, the plugin will not work.
+        {hl_groups?}                (adopure.Highlights)  Highlight groups to apply.
+        {preferred_remotes?}        (string[])            List with preferred remotes to extract Azure DevOps context from.
+                                                          Remotes are elected among the following options:
+                                                          1. Any remote in this list can be picked, non-deterministically.
+                                                          2. Any Azure DevOps remote.
+                                                          3. Any remote. If the remote is not an Azure DevOps remote, the plugin will not work.
+        {filter_my_pull_requests?}  (boolean)             Fetches only pull requests assigned to me, my team or created by me.
 
 
 ==============================================================================
