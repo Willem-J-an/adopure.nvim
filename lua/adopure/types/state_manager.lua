@@ -16,7 +16,7 @@ function AdoContext:new()
     local o = {
         organization_url = organization_url,
         project_name = project_name,
-        repository_name = repository_name,
+        repository_name = require("adopure.utils").url_decode(repository_name),
         root_path = root_path,
     }
     self.__index = self
