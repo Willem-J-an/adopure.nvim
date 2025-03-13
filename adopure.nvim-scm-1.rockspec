@@ -10,11 +10,13 @@ source = {
 dependencies = {
 	"plenary.nvim",
 	"telescope.nvim",
+	"neorocks/diffview.nvim", -- Optionally required to open PR in diffview
 }
 test_dependencies = {
 	"nlua",
 	"plenary.nvim",
 	"telescope.nvim",
+	"neorocks/diffview.nvim", -- Optionally required to open PR in diffview
 }
 build = {
 	type = "builtin",
