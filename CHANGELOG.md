@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.1](https://github.com/Willem-J-an/adopure.nvim/compare/v2.1.0...v2.1.1) (2025-03-13)
+
+
+### Bug Fixes
+
+* add diffview.nvim dependency ([f26aee1](https://github.com/Willem-J-an/adopure.nvim/commit/f26aee17de657d822f9cf513fd3cc532271dc519))
+* update thread markers when changed ([fc5a325](https://github.com/Willem-J-an/adopure.nvim/commit/fc5a325bd818df528b0a36dd34387f012b3378e0))
+
 ## [2.1.0](https://github.com/Willem-J-an/adopure.nvim/compare/v2.0.0...v2.1.0) (2025-01-27)
 
 
