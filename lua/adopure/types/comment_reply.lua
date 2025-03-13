@@ -64,6 +64,7 @@ function CommentReply:update_status(pull_request, _)
         end
         self.thread.status = updated_thread.status
         self.thread:render_reply_thread()
+        self.thread.is_changed = true
     end)
 end
 

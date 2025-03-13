@@ -117,7 +117,6 @@ function M.confirm_checkout_and_open(pull_request, open_callable)
             open_callable()
             return
         end
-
         local git_checkout_remote_job = Job:new({ ---@diagnostic disable-line: missing-fields
             command = "git",
             args = { "checkout", pull_request.lastMergeSourceCommit.commitId },

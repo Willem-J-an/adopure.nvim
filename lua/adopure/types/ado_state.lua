@@ -53,6 +53,7 @@ function AdoState.load_connection_data()
     end
     return result
 end
+
 ---Fetch comment threads from Azure DevOps.
 ---Comment threads are added upon initialization and when creating new threads with the plugin.
 ---Comment threads created by others, or without the plugin are not automatically loaded.
@@ -64,7 +65,9 @@ function AdoState:load_pull_request_threads(_)
     end
     self.pull_request_threads = vim.iter(pull_request_threads)
         :map(function(thread) ---@param thread adopure.Thread
-            return require("adopure.types.ado_thread").AdoThread:new(thread)
+            local new_thread = require("adopure.types.ado_thread").AdoThread:new(thread)
+            new_thread.is_changed = true
+            return new_thread
         end)
         :totable()
 end

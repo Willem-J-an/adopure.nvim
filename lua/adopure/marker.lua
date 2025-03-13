@@ -103,6 +103,7 @@ function M.create_new_comment_marks(bufnr, state, file_path)
         end)
         :each(function(thread) ---@param thread adopure.AdoThread
             create_extmark(bufnr, thread, thread.threadContext)
+            thread.is_changed = false
         end)
 end
 

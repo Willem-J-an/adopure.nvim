@@ -14,6 +14,7 @@ function AdoThread:new(pull_request_thread)
     self.__index = self
     ---@type adopure.AdoThread
     self = setmetatable(o, self) ---@diagnostic disable-line assign-type-mismatch
+    self.is_changed = false
     return self
 end
 
@@ -76,7 +77,10 @@ function AdoThread:should_render_extmark(existing_extmarks, focused_file_path)
     if
         focused_file_path == tostring(self:targeted_file_path())
         and self:is_active_thread()
-        and not self:is_marked(existing_extmarks)
+        and (
+            not self:is_marked(existing_extmarks)
+            or self.is_changed
+        )
     then
         return true
     end
